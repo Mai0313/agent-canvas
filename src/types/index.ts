@@ -1,11 +1,11 @@
 export interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
   timestamp: Date;
 }
 
-export type APIProvider = 'openai' | 'azure';
+export type APIProvider = "openai" | "azure";
 
 export interface ModelSettings {
   provider: APIProvider;

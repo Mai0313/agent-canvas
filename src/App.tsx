@@ -20,7 +20,7 @@ const App: React.FC = () => {
     temperature: 0.7,
     maxTokens: 2048,
     azureDeployment: '',
-    azureApiVersion: '2024-04-01'
+    azureApiVersion: '2024-12-01-preview'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -97,7 +97,7 @@ const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChang
               name="azureApiVersion" 
               value={settings.azureApiVersion || ''} 
               onChange={handleChange} 
-              placeholder="2024-04-01"
+              placeholder="2024-12-01-preview"
             />
           </div>
         </>

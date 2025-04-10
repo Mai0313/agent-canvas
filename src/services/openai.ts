@@ -1,12 +1,12 @@
-import { AzureOpenAI, OpenAI } from 'openai';
-import { Message, ModelSettings } from '../types';
+import { AzureOpenAI, OpenAI } from "openai";
+import { Message, ModelSettings } from "../types";
 
 // Initialize the appropriate client based on provider
 const createClient = (settings: ModelSettings) => {
-  if (settings.provider === 'azure') {
+  if (settings.provider === "azure") {
     return new AzureOpenAI({
       apiKey: settings.apiKey,
-      baseURL: settings.baseUrl,
+      baseURL: settings.baseUrl + "/openai",
       deployment: settings.azureDeployment,
       apiVersion: settings.azureApiVersion,
       dangerouslyAllowBrowser: true,
@@ -19,21 +19,26 @@ const createClient = (settings: ModelSettings) => {
       apiKey: settings.apiKey,
       baseURL: settings.baseUrl,
       dangerouslyAllowBrowser: true,
+      defaultHeaders: {
+        "X-User-Id": settings.userId, // Add the same header for OpenAI client
+      },
     });
   }
 };
 
 export const sendChatCompletion = async (
-  messages: Message[], 
+  messages: Message[],
   settings: ModelSettings
 ): Promise<string> => {
   try {
     const client = createClient(settings);
-    
-    const formattedMessages = messages.map(m => ({ 
-      role: m.role, 
-      content: m.content 
+
+    const formattedMessages = messages.map((m) => ({
+      role: m.role,
+      content: m.content,
     }));
+
+    console.log("Sending request to:", settings.baseUrl);
 
     const response = await client.chat.completions.create({
       model: settings.model,
@@ -41,10 +46,10 @@ export const sendChatCompletion = async (
       temperature: settings.temperature,
       max_tokens: settings.maxTokens,
     });
-    
-    return response.choices[0].message.content || '';
+
+    return response.choices[0].message.content || "";
   } catch (error) {
-    console.error('Error calling AI API:', error);
+    console.error("Error calling AI API:", error);
     throw error;
   }
 };
