@@ -6,9 +6,11 @@ import { containsMarkdown } from '../utils/markdownUtils';
 interface ChatBoxProps {
   messages: Message[];
   onSendMessage: (content: string) => void;
-  onMarkdownDetected: (content: string) => void;
+  onMarkdownDetected: (content: string, messageId: string) => void;
   isLoading: boolean;
   streamingMessageId?: string | null;
+  editingMessageId?: string | null;
+  longestCodeBlockPosition?: { start: number; end: number } | null;
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -16,7 +18,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   onSendMessage,
   onMarkdownDetected,
   isLoading,
-  streamingMessageId
+  streamingMessageId,
+  editingMessageId,
+  longestCodeBlockPosition
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -30,7 +34,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       .find(m => m.role === 'assistant');
 
     if (lastAssistantMessage && containsMarkdown(lastAssistantMessage.content)) {
-      onMarkdownDetected(lastAssistantMessage.content);
+      onMarkdownDetected(lastAssistantMessage.content, lastAssistantMessage.id);
     }
   }, [messages, onMarkdownDetected]);
 
@@ -61,6 +65,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               key={message.id} 
               message={message} 
               isStreaming={streamingMessageId === message.id}
+              isEditing={editingMessageId === message.id}
+              longestCodeBlockPosition={message.id === editingMessageId ? longestCodeBlockPosition : null}
             />
           ))
         )}
