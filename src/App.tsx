@@ -15,8 +15,8 @@ const App: React.FC = () => {
     // baseUrl: 'https://api.openai.com/v1',
     // apiKey: '',
     baseUrl: 'https://tma.mediatek.inc/tma/sdk/api',
-    apiKey: 'mtk26247',
-    userId: 'mtk26247',
+    apiKey: 'srv_dvc_tma001',
+    userId: 'srv_dvc_tma001',
     temperature: 0.7,
     maxTokens: 2048,
     azureDeployment: '',
@@ -24,7 +24,7 @@ const App: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Markdown canvas state
   const [markdownContent, setMarkdownContent] = useState<string>('');
   const [isMarkdownCanvasOpen, setIsMarkdownCanvasOpen] = useState(false);
@@ -37,18 +37,18 @@ const App: React.FC = () => {
       content,
       timestamp: new Date()
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Send all messages (including the new one) to API
       const response = await sendChatCompletion(
         [...messages, userMessage],
         settings
       );
-      
+
       // Add assistant response
       const assistantMessage: Message = {
         id: uuidv4(),
@@ -56,7 +56,7 @@ const App: React.FC = () => {
         content: response,
         timestamp: new Date()
       };
-      
+
       setMessages(prev => [...prev, assistantMessage]);
     } catch (err: any) {
       // Display the detailed error message from the service
@@ -78,59 +78,58 @@ const App: React.FC = () => {
       const lastAssistantIndex = [...prev]
         .reverse()
         .findIndex(m => m.role === 'assistant');
-      
+
       if (lastAssistantIndex === -1) return prev;
-      
+
       const reversedIndex = prev.length - 1 - lastAssistantIndex;
       const updatedMessages = [...prev];
       updatedMessages[reversedIndex] = {
         ...updatedMessages[reversedIndex],
         content: editedContent
       };
-      
+
       return updatedMessages;
     });
-    
+
     setMarkdownContent(editedContent);
   };
 
   return (
     <div className="app">
       <div className="sidebar">
-        <ModelSettings 
-          settings={settings} 
-          onSettingsChange={setSettings} 
+        <ModelSettings
+          settings={settings}
+          onSettingsChange={setSettings}
         />
       </div>
-      
+
       <div className="main-content">
-        <ChatBox 
-          messages={messages} 
+        <ChatBox
+          messages={messages}
           onSendMessage={handleSendMessage}
           onMarkdownDetected={handleMarkdownDetected}
           isLoading={isLoading}
         />
-        
+
         {isLoading && (
           <div className="loading-indicator">
             <p>AI is thinking...</p>
           </div>
         )}
-        
+
         {error && (
           <div className="error-message">
             <p>{error}</p>
-            <button 
-              onClick={() => setError(null)} 
+            <button
+              onClick={() => setError(null)}
               style={{ background: 'transparent', border: 'none', color: 'white', marginLeft: '10px', cursor: 'pointer' }}
             >
-              ×
             </button>
           </div>
         )}
       </div>
-      
-      <MarkdownCanvas 
+
+      <MarkdownCanvas
         content={markdownContent}
         isOpen={isMarkdownCanvasOpen}
         onClose={() => setIsMarkdownCanvasOpen(false)}

@@ -10,9 +10,9 @@ interface ChatBoxProps {
   isLoading: boolean;
 }
 
-const ChatBox: React.FC<ChatBoxProps> = ({ 
-  messages, 
-  onSendMessage, 
+const ChatBox: React.FC<ChatBoxProps> = ({
+  messages,
+  onSendMessage,
   onMarkdownDetected,
   isLoading
 }) => {
@@ -38,7 +38,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (inputValue.trim()) {
       onSendMessage(inputValue.trim());
       setInputValue('');
@@ -60,7 +60,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         )}
         <div ref={messagesEndRef} />
       </div>
-      
+
       <form className="chat-input-form" onSubmit={handleSubmit}>
         <textarea
           value={inputValue}

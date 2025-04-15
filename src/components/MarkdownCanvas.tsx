@@ -10,9 +10,9 @@ interface MarkdownCanvasProps {
   onSave: (content: string) => void;
 }
 
-const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({ 
-  content, 
-  isOpen, 
+const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
+  content,
+  isOpen,
   onClose,
   onSave
 }) => {
@@ -55,7 +55,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
           <button onClick={onClose}>Close</button>
         </div>
       </div>
-      
+
       <div className="markdown-content">
         {editMode ? (
           <textarea
@@ -70,7 +70,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
               code: ({ className, children, ...props }) => {
                 const match = /language-(\w+)/.exec(className || '');
                 const codeText = String(children).replace(/\n$/, '');
-                
+
                 return match ? (
                   <SyntaxHighlighter
                     style={vscDarkPlus as any}
