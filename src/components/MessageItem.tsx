@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Message } from '../types';
 
 interface MessageItemProps {
@@ -6,24 +6,47 @@ interface MessageItemProps {
   isStreaming?: boolean;
   isEditing?: boolean;
   longestCodeBlockPosition?: { start: number; end: number } | null;
+  toggleMarkdownCanvas: () => void;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({ 
   message, 
   isStreaming = false,
   isEditing = false,
-  longestCodeBlockPosition = null
+  longestCodeBlockPosition = null,
+  toggleMarkdownCanvas
 }) => {
   // Function to replace the longest code block with a placeholder when message is being edited
-  const processMessageContent = (content: string): string => {
+  const processMessageContent = (content: string): ReactNode[] => {
     if (isEditing && longestCodeBlockPosition) {
       const { start, end } = longestCodeBlockPosition;
-      return content.substring(0, start) + '[Code is displayed in the editor panel →]' + content.substring(end);
+      const beforeBlock = content.substring(0, start);
+      const afterBlock = content.substring(end);
+      
+      // Split the text into lines and create elements
+      const beforeLines = beforeBlock.split('\n').map((line, i) => 
+        <div key={`before-${i}`}>{line || <br />}</div>
+      );
+      
+      const afterLines = afterBlock.split('\n').map((line, i) => 
+        <div key={`after-${i}`}>{line || <br />}</div>
+      );
+      
+      // Create the clickable placeholder element
+      const placeholderElement = (
+        <div key="placeholder" className="code-block-placeholder" onClick={toggleMarkdownCanvas}>
+          <span className="code-block-link">[Code is displayed in the editor panel →]</span>
+        </div>
+      );
+      
+      return [...beforeLines, placeholderElement, ...afterLines];
     }
-    return content;
+    
+    // If not editing, just return the regular content split by lines
+    return content.split('\n').map((line, i) => <div key={i}>{line || <br />}</div>);
   };
 
-  const processedContent = processMessageContent(message.content);
+  const contentElements = processMessageContent(message.content);
 
   return (
     <div className={`message ${message.role} ${isStreaming ? 'streaming' : ''}`}>
@@ -35,15 +58,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </span>
       </div>
       <div className="message-content">
-        {processedContent.split('\n').map((line, i) => (
-          <div key={i}>{line || <br />}</div>
-        ))}
+        {contentElements}
         {isStreaming && message.content === '' && <div className="typing-indicator">...</div>}
-        {isEditing && longestCodeBlockPosition && (
-          <div className="code-editing-indicator">
-            <em>Longest code block is displayed in the editor panel →</em>
-          </div>
-        )}
       </div>
     </div>
   );

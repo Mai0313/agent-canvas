@@ -84,6 +84,25 @@ const App: React.FC = () => {
     }
   };
 
+  const toggleMarkdownCanvas = (messageId: string, content: string) => {
+    // If already open for this message, close it
+    if (isMarkdownCanvasOpen && editingMessageId === messageId) {
+      setIsMarkdownCanvasOpen(false);
+      setEditingMessageId(null);
+      setLongestCodeBlockPosition(null);
+    } else {
+      // If closed or open for a different message, open for this one
+      const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
+      
+      if (longestBlock && blockPosition) {
+        setMarkdownContent(longestBlock);
+        setEditingMessageId(messageId);
+        setLongestCodeBlockPosition(blockPosition);
+        setIsMarkdownCanvasOpen(true);
+      }
+    }
+  };
+
   const handleMarkdownDetected = (content: string, messageId: string) => {
     const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
     
@@ -151,6 +170,7 @@ const App: React.FC = () => {
           streamingMessageId={streamingMessageId}
           editingMessageId={editingMessageId}
           longestCodeBlockPosition={longestCodeBlockPosition}
+          toggleMarkdownCanvas={toggleMarkdownCanvas}
         />
 
         {isLoading && (

@@ -11,6 +11,7 @@ interface ChatBoxProps {
   streamingMessageId?: string | null;
   editingMessageId?: string | null;
   longestCodeBlockPosition?: { start: number; end: number } | null;
+  toggleMarkdownCanvas: (messageId: string, content: string) => void;
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -20,7 +21,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   isLoading,
   streamingMessageId,
   editingMessageId,
-  longestCodeBlockPosition
+  longestCodeBlockPosition,
+  toggleMarkdownCanvas
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -67,6 +69,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               isStreaming={streamingMessageId === message.id}
               isEditing={editingMessageId === message.id}
               longestCodeBlockPosition={message.id === editingMessageId ? longestCodeBlockPosition : null}
+              toggleMarkdownCanvas={() => toggleMarkdownCanvas(message.id, message.content)}
             />
           ))
         )}
