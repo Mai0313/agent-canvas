@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -18,10 +18,31 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 }) => {
   const [editMode, setEditMode] = useState(false);
   const [editableContent, setEditableContent] = useState(content);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setEditableContent(content);
   }, [content]);
+
+  useEffect(() => {
+    // Add click event listener to detect clicks outside the panel
+    const handleClickOutside = (event: MouseEvent) => {
+      if (canvasRef.current && 
+          !canvasRef.current.contains(event.target as Node) && 
+          !event.target?.toString().includes('code-block-link')) {
+        // Only close if we're not clicking on the toggle element itself
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
   const handleEdit = () => {
     setEditMode(true);
@@ -40,7 +61,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="markdown-canvas">
+    <div className="markdown-canvas" ref={canvasRef}>
       <div className="markdown-header">
         <h3>Markdown Viewer</h3>
         <div className="markdown-controls">
