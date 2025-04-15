@@ -80,24 +80,13 @@ const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChang
       {isAzure && (
         <>
           <div className="settings-group">
-            <label>Azure Deployment Name</label>
-            <input
-              type="text"
-              name="azureDeployment"
-              value={settings.azureDeployment || ''}
-              onChange={handleChange}
-              placeholder="Enter your deployment name"
-            />
-          </div>
-
-          <div className="settings-group">
             <label>Azure API Version</label>
             <input
               type="text"
               name="azureApiVersion"
-              value={settings.azureApiVersion || ''}
+              value={settings.azureApiVersion || '2025-03-01-preview'}
               onChange={handleChange}
-              placeholder="2024-12-01-preview"
+              placeholder="2025-03-01-preview"
             />
           </div>
         </>
@@ -109,7 +98,7 @@ const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChang
           type="range"
           name="temperature"
           min="0"
-          max="2"
+          max="1"
           step="0.1"
           value={settings.temperature}
           onChange={handleChange}
@@ -123,7 +112,7 @@ const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChang
           name="maxTokens"
           min="1"
           max="32000"
-          value={settings.maxTokens}
+          value={settings.maxTokens || 2048}
           onChange={handleChange}
         />
       </div>

@@ -11,14 +11,13 @@ const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [settings, setSettings] = useState<ModelSettingsType>({
     provider: 'openai',
-    model: 'gpt-4o',
+    model: 'aide-gpt-4o',
     baseUrl: 'https://tma.mediatek.inc/tma/sdk/api',
     apiKey: 'srv_dvc_tma001',
     userId: 'srv_dvc_tma001',
     temperature: 0.7,
     maxTokens: 2048,
-    azureDeployment: '',
-    azureApiVersion: '2024-12-01-preview'
+    azureApiVersion: '2025-03-01-preview'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
