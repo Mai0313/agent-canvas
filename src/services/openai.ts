@@ -10,18 +10,12 @@ const createClient = (settings: ModelSettings) => {
       deployment: settings.azureDeployment,
       apiVersion: settings.azureApiVersion,
       dangerouslyAllowBrowser: true,
-      // defaultHeaders: {
-      //   "X-User-Id": settings.userId,
-      // },
     });
   } else {
     return new OpenAI({
       apiKey: settings.apiKey,
       baseURL: settings.baseUrl,
       dangerouslyAllowBrowser: true,
-      // defaultHeaders: {
-      //   "X-User-Id": settings.userId, // Add the same header for OpenAI client
-      // },
     });
   }
 };
