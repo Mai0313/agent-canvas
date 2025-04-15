@@ -8,13 +8,15 @@ interface ChatBoxProps {
   onSendMessage: (content: string) => void;
   onMarkdownDetected: (content: string) => void;
   isLoading: boolean;
+  streamingMessageId?: string | null;
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({
   messages,
   onSendMessage,
   onMarkdownDetected,
-  isLoading
+  isLoading,
+  streamingMessageId
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -55,7 +57,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           </div>
         ) : (
           messages.map(message => (
-            <MessageItem key={message.id} message={message} />
+            <MessageItem 
+              key={message.id} 
+              message={message} 
+              isStreaming={streamingMessageId === message.id}
+            />
           ))
         )}
         <div ref={messagesEndRef} />

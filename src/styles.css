@@ -111,6 +111,26 @@ body {
   margin-right: 50px;
 }
 
+.message.streaming {
+  border-left: 3px solid var(--primary-color);
+}
+
+.streaming-indicator {
+  color: var(--primary-color);
+  font-style: italic;
+}
+
+.typing-indicator {
+  display: inline-block;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+
 .message-header {
   display: flex;
   justify-content: space-between;

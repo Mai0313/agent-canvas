@@ -47,3 +47,38 @@ export const sendChatCompletion = async (
     throw error;
   }
 };
+
+export const streamChatCompletion = async (
+  messages: Message[],
+  settings: ModelSettings,
+  onToken: (token: string) => void
+): Promise<void> => {
+  try {
+    const client = createClient(settings);
+
+    const formattedMessages = messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    console.log("Sending streaming request to:", settings.baseUrl);
+
+    const stream = await client.chat.completions.create({
+      model: settings.model,
+      messages: formattedMessages,
+      temperature: settings.temperature,
+      max_tokens: settings.maxTokens,
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || "";
+      if (content) {
+        onToken(content);
+      }
+    }
+  } catch (error) {
+    console.error("Error streaming from AI API:", error);
+    throw error;
+  }
+};
