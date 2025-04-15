@@ -12,7 +12,6 @@ export interface ModelSettings {
   model: string;
   baseUrl: string;
   apiKey: string;
-  userId: string;
   temperature: number;
   maxTokens: number;
   // Azure OpenAI specific settings

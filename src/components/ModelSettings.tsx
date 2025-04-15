@@ -80,6 +80,17 @@ const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChang
       {isAzure && (
         <>
           <div className="settings-group">
+            <label>Azure Deployment Name</label>
+            <input
+              type="text"
+              name="azureDeployment"
+              value={settings.azureDeployment || ''}
+              onChange={handleChange}
+              placeholder="Deployment Name (Optional)"
+            />
+          </div>
+
+          <div className="settings-group">
             <label>Azure API Version</label>
             <input
               type="text"

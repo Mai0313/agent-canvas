@@ -14,7 +14,7 @@ const App: React.FC = () => {
     model: 'aide-gpt-4o',
     baseUrl: 'https://tma.mediatek.inc/tma/sdk/api',
     apiKey: 'srv_dvc_tma001',
-    userId: 'srv_dvc_tma001',
+    azureDeployment: '',
     temperature: 0.7,
     maxTokens: 2048,
     azureApiVersion: '2025-03-01-preview'
