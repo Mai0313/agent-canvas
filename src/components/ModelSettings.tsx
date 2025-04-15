@@ -4,9 +4,10 @@ import { ModelSettings as ModelSettingsType, APIProvider } from '../types';
 interface ModelSettingsProps {
   settings: ModelSettingsType;
   onSettingsChange: (settings: ModelSettingsType) => void;
+  isCollapsed: boolean;
 }
 
-const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChange }) => {
+const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChange, isCollapsed }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
@@ -30,103 +31,107 @@ const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChang
 
   return (
     <div className="model-settings">
-      <h3>Model Settings</h3>
+      <h3>{isCollapsed ? '⚙' : 'Model Settings'}</h3>
 
-      <div className="settings-group">
-        <label>API Provider</label>
-        <select
-          name="provider"
-          value={settings.provider}
-          onChange={handleChange}
-        >
-          <option value="openai">OpenAI</option>
-          <option value="azure">Azure OpenAI</option>
-        </select>
-      </div>
-
-      <div className="settings-group">
-        <label>Model</label>
-        <select
-          name="model"
-          value={settings.model}
-          onChange={handleChange}
-        >
-          <option value="gpt-4o">GPT-4o</option>
-        </select>
-      </div>
-
-      <div className="settings-group">
-        <label>Base URL</label>
-        <input
-          type="text"
-          name="baseUrl"
-          value={settings.baseUrl}
-          onChange={handleChange}
-          placeholder={isAzure ? "https://your-resource.openai.azure.com" : "https://api.openai.com/v1"}
-        />
-      </div>
-
-      <div className="settings-group">
-        <label>API Key</label>
-        <input
-          type="password"
-          name="apiKey"
-          value={settings.apiKey}
-          onChange={handleChange}
-          placeholder="Enter your API key"
-        />
-      </div>
-
-      {isAzure && (
+      {!isCollapsed && (
         <>
           <div className="settings-group">
-            <label>Azure Deployment Name</label>
+            <label>API Provider</label>
+            <select
+              name="provider"
+              value={settings.provider}
+              onChange={handleChange}
+            >
+              <option value="openai">OpenAI</option>
+              <option value="azure">Azure OpenAI</option>
+            </select>
+          </div>
+
+          <div className="settings-group">
+            <label>Model</label>
+            <select
+              name="model"
+              value={settings.model}
+              onChange={handleChange}
+            >
+              <option value="gpt-4o">GPT-4o</option>
+            </select>
+          </div>
+
+          <div className="settings-group">
+            <label>Base URL</label>
             <input
               type="text"
-              name="azureDeployment"
-              value={settings.azureDeployment || ''}
+              name="baseUrl"
+              value={settings.baseUrl}
               onChange={handleChange}
-              placeholder="Deployment Name (Optional)"
+              placeholder={isAzure ? "https://your-resource.openai.azure.com" : "https://api.openai.com/v1"}
             />
           </div>
 
           <div className="settings-group">
-            <label>Azure API Version</label>
+            <label>API Key</label>
             <input
-              type="text"
-              name="azureApiVersion"
-              value={settings.azureApiVersion || '2025-03-01-preview'}
+              type="password"
+              name="apiKey"
+              value={settings.apiKey}
               onChange={handleChange}
-              placeholder="2025-03-01-preview"
+              placeholder="Enter your API key"
+            />
+          </div>
+
+          {isAzure && (
+            <>
+              <div className="settings-group">
+                <label>Azure Deployment Name</label>
+                <input
+                  type="text"
+                  name="azureDeployment"
+                  value={settings.azureDeployment || ''}
+                  onChange={handleChange}
+                  placeholder="Deployment Name (Optional)"
+                />
+              </div>
+
+              <div className="settings-group">
+                <label>Azure API Version</label>
+                <input
+                  type="text"
+                  name="azureApiVersion"
+                  value={settings.azureApiVersion || '2025-03-01-preview'}
+                  onChange={handleChange}
+                  placeholder="2025-03-01-preview"
+                />
+              </div>
+            </>
+          )}
+
+          <div className="settings-group">
+            <label>Temperature: {settings.temperature}</label>
+            <input
+              type="range"
+              name="temperature"
+              min="0"
+              max="1"
+              step="0.1"
+              value={settings.temperature}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="settings-group">
+            <label>Max Tokens</label>
+            <input
+              type="number"
+              name="maxTokens"
+              min="1"
+              max="32000"
+              value={settings.maxTokens || 2048}
+              onChange={handleChange}
             />
           </div>
         </>
       )}
-
-      <div className="settings-group">
-        <label>Temperature: {settings.temperature}</label>
-        <input
-          type="range"
-          name="temperature"
-          min="0"
-          max="1"
-          step="0.1"
-          value={settings.temperature}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="settings-group">
-        <label>Max Tokens</label>
-        <input
-          type="number"
-          name="maxTokens"
-          min="1"
-          max="32000"
-          value={settings.maxTokens || 2048}
-          onChange={handleChange}
-        />
-      </div>
     </div>
   );
 };

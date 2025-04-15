@@ -34,6 +34,43 @@ body {
   border-right: 1px solid var(--border-color);
   padding: 20px;
   overflow-y: auto;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 100;
+}
+
+.sidebar.collapsed {
+  width: 50px;
+  padding: 10px 5px;
+  overflow: hidden;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  background: var(--primary-color);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  z-index: 2;
+}
+
+.sidebar.collapsed .model-settings h3 {
+  text-align: center;
+  margin: 10px auto;
+  cursor: pointer;
+  font-size: 20px; /* Larger gear icon */
+}
+
+.sidebar.collapsed .settings-group {
+  display: none;
 }
 
 .main-content {
@@ -51,6 +88,7 @@ body {
   margin-bottom: 20px;
   font-size: 18px;
   color: var(--text-color);
+  transition: all 0.3s ease;
 }
 
 .settings-group {
