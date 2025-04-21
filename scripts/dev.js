@@ -1,6 +1,5 @@
 const { spawn } = require("child_process");
 const path = require("path");
-const fs = require("fs");
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -22,27 +21,22 @@ for (let i = 0; i < args.length; i++) {
   }
 }
 
-// Check if build directory exists
-const buildPath = path.resolve(__dirname, "../build");
-if (!fs.existsSync(buildPath)) {
-  console.error(
-    'Error: Build directory not found. Please run "yarn build" first.',
-  );
-  process.exit(1);
-}
+// Set environment variables
+process.env.PORT = port;
+process.env.HOST = host;
 
-console.log(`Starting production server on ${host}:${port}`);
+console.log(`Starting development server on ${host}:${port}`);
 
-// Start serve to serve the built files
-const servePath = path.resolve(__dirname, "../node_modules/.bin/serve");
-
-const childProcess = spawn(
-  servePath,
-  ["-s", buildPath, "-l", port, "-h", host],
-  {
-    stdio: "inherit",
-  },
+// Start React development server with hot reloading
+const reactScriptsPath = path.resolve(
+  __dirname,
+  "../node_modules/.bin/react-scripts",
 );
+
+const childProcess = spawn(reactScriptsPath, ["start"], {
+  stdio: "inherit",
+  env: { ...process.env },
+});
 
 // Forward signals
 process.on("SIGINT", () => childProcess.kill("SIGINT"));
