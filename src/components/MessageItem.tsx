@@ -32,16 +32,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
         <div key={`after-${i}`}>{line || <br />}</div>
       );
 
-      // Create the clickable placeholder element - show different text based on open/closed state
-      const placeholderElement = (
-        <div key="placeholder" className="code-block-placeholder" onClick={toggleMarkdownCanvas}>
-          <span className={`code-block-link ${isEditing ? 'active' : ''}`}>
-            {isEditing ? '[Click to close editor ←]' : '[Code is displayed in the editor panel →]'}
-          </span>
-        </div>
-      );
-
-      return [...beforeLines, placeholderElement, ...afterLines];
+      // Only show placeholder when not editing to remove the blue box
+      return [...beforeLines, ...afterLines];
     }
 
     // If not editing, just return the regular content split by lines
