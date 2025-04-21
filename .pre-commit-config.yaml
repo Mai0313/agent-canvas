@@ -15,14 +15,9 @@ default_stages:
 
 repos:
   - repo: https://github.com/oxsecurity/megalinter
-    rev: v6.8.0 # Git tag specifying the hook, not mega-linter-runner, version
+    rev: v8.5.0
     hooks:
-      - id: megalinter-incremental # Faster, less thorough
-        stages:
-          - pre-commit
-      - id: megalinter-full # Slower, more thorough
-        stages:
-          - pre-push
+      - id: megalinter-incremental
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
