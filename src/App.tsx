@@ -23,16 +23,13 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Markdown canvas state
+  // Markdown canvas state for BlockNote editor
   const [markdownContent, setMarkdownContent] = useState<string>("");
   const [isMarkdownCanvasOpen, setIsMarkdownCanvasOpen] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
 
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
-    null,
-  );
-
-  // Add state to track the position of the longest code block
+  // State to track code block position
   const [longestCodeBlockPosition, setLongestCodeBlockPosition] = useState<{
     start: number;
     end: number;
@@ -96,7 +93,7 @@ const App: React.FC = () => {
       setEditingMessageId(null);
       setLongestCodeBlockPosition(null);
     } else {
-      // If closed or open for a different message, open for this one
+      // Extract the code block from the message
       const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
 
       if (longestBlock && blockPosition) {
@@ -108,17 +105,21 @@ const App: React.FC = () => {
     }
   };
 
+  // Check if a message contains a code block and show the BlockNote editor
   const handleMarkdownDetected = (content: string, messageId: string) => {
-    const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
+    if (content.includes("```")) {
+      const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
 
-    if (longestBlock && blockPosition) {
-      setMarkdownContent(longestBlock);
-      setEditingMessageId(messageId);
-      setLongestCodeBlockPosition(blockPosition);
-      setIsMarkdownCanvasOpen(true);
+      if (longestBlock && blockPosition) {
+        setMarkdownContent(longestBlock);
+        setEditingMessageId(messageId);
+        setLongestCodeBlockPosition(blockPosition);
+        setIsMarkdownCanvasOpen(true);
+      }
     }
   };
 
+  // Update the message with edited code block content
   const handleSaveMarkdown = (editedContent: string) => {
     setMessages((prev) => {
       const updatedMessages = [...prev];
@@ -145,6 +146,7 @@ const App: React.FC = () => {
     setMarkdownContent(editedContent);
   };
 
+  // Close the BlockNote editor
   const handleCloseMarkdownCanvas = () => {
     setIsMarkdownCanvasOpen(false);
     setEditingMessageId(null);
@@ -188,11 +190,14 @@ const App: React.FC = () => {
                 marginLeft: "10px",
                 cursor: "pointer",
               }}
-            ></button>
+            >
+              ✕
+            </button>
           </div>
         )}
       </div>
 
+      {/* Use the updated BlockNote-based MarkdownCanvas component */}
       <MarkdownCanvas
         content={markdownContent}
         isOpen={isMarkdownCanvasOpen}

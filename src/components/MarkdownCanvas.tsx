@@ -1,7 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface MarkdownCanvasProps {
   content: string;
@@ -20,6 +17,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const [editableContent, setEditableContent] = useState(content);
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // Update content when it changes
   useEffect(() => {
     setEditableContent(content);
   }, [content]);
@@ -60,13 +58,18 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     setEditMode(false);
   };
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditableContent(e.target.value);
+  };
+
   if (!isOpen) return null;
 
+  // Simplified implementation that uses a more basic approach with a textarea
   return (
-    <div className='markdown-canvas' ref={canvasRef}>
-      <div className='markdown-header'>
-        <h3>Markdown Viewer</h3>
-        <div className='markdown-controls'>
+    <div className="markdown-canvas" ref={canvasRef}>
+      <div className="markdown-header">
+        <h3>Code Editor</h3>
+        <div className="markdown-controls">
           {!editMode ? (
             <button onClick={handleEdit}>Edit</button>
           ) : (
@@ -79,38 +82,25 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
         </div>
       </div>
 
-      <div className='markdown-content'>
-        {editMode ? (
-          <textarea
-            value={editableContent}
-            onChange={(e) => setEditableContent(e.target.value)}
-            className='markdown-editor'
-          />
-        ) : (
-          <ReactMarkdown
-            children={content}
-            components={{
-              code: ({ className, children, ...props }) => {
-                const match = /language-(\w+)/.exec(className || "");
-                const codeText = String(children).replace(/\n$/, "");
-
-                return match ? (
-                  <SyntaxHighlighter
-                    style={vscDarkPlus as any}
-                    language={match[1]}
-                    PreTag='div'
-                  >
-                    {codeText}
-                  </SyntaxHighlighter>
-                ) : (
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
-                );
-              },
-            }}
-          />
-        )}
+      <div className="markdown-content">
+        <textarea
+          value={editableContent}
+          onChange={handleContentChange}
+          readOnly={!editMode}
+          className={editMode ? "markdown-editor" : "markdown-preview"}
+          style={{
+            width: "100%",
+            height: "100%", 
+            backgroundColor: "#282c34",
+            color: "#f8f9fa",
+            padding: "20px",
+            fontFamily: "Consolas, 'Courier New', monospace",
+            fontSize: "14px",
+            border: "none",
+            outline: editMode ? "1px solid #495057" : "none",
+            resize: "none"
+          }}
+        />
       </div>
     </div>
   );

@@ -205,17 +205,19 @@ body {
   border-radius: 4px;
 }
 
+/* Updated markdown canvas styles for BlockNote */
 .markdown-canvas {
   position: fixed;
   top: 0;
   right: 0;
   width: 40%;
   height: 100vh;
-  background-color: white;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  background-color: #282c34;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   display: flex;
   flex-direction: column;
+  color: #f8f9fa;
 }
 
 .markdown-header {
@@ -223,7 +225,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #495057;
+  background-color: #343a40;
 }
 
 .markdown-controls button {
@@ -234,39 +237,44 @@ body {
   border-radius: 4px;
   cursor: pointer;
   margin-left: 10px;
+  transition: background-color 0.2s;
+}
+
+.markdown-controls button:hover {
+  background-color: #236bce;
 }
 
 .markdown-content {
   flex: 1;
-  padding: 20px;
+  padding: 0;
   overflow-y: auto;
 }
 
-.markdown-editor {
+/* BlockNote editor styles */
+.markdown-content .bn-container {
+  height: 100%;
+  border: none;
+}
+
+.markdown-content .bn-editor {
+  height: 100%;
+  background-color: #282c34;
+  color: #f8f9fa;
+  padding: 20px;
+}
+
+/* Preview textarea style */
+.markdown-preview {
   width: 100%;
   height: 100%;
-  padding: 15px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+  background-color: #282c34;
+  color: #f8f9fa;
+  border: none;
+  padding: 20px;
   font-family: "Courier New", monospace;
   font-size: 14px;
   resize: none;
-}
-
-.markdown-content pre {
-  background-color: #282c34;
-  padding: 15px;
-  border-radius: 4px;
-  overflow-x: auto;
-}
-
-.code-editing-indicator {
-  margin-top: 10px;
-  padding: 8px 12px;
-  background-color: #f8f9fa;
-  border-left: 3px solid var(--primary-color);
-  color: var(--secondary-text);
-  font-size: 0.9em;
+  outline: none;
 }
 
 .code-block-placeholder {

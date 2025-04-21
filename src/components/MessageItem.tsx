@@ -16,33 +16,23 @@ const MessageItem: React.FC<MessageItemProps> = ({
   longestCodeBlockPosition = null,
   toggleMarkdownCanvas,
 }) => {
-  // Function to replace the longest code block with a placeholder when message is being edited
-  const processMessageContent = (content: string): ReactNode[] => {
-    if (isEditing && longestCodeBlockPosition) {
-      const { start, end } = longestCodeBlockPosition;
-      const beforeBlock = content.substring(0, start);
-      const afterBlock = content.substring(end);
-
-      // Split the text into lines and create elements
-      const beforeLines = beforeBlock
+  // Function to render the message content with a "View Code" button if needed
+  const processMessageContent = (): ReactNode[] => {
+    // Check if there's a code block in the message
+    const hasCodeBlock = message.content.includes("```");
+    
+    if (hasCodeBlock && !isEditing) {
+      // Split the message content by lines for better rendering
+      return message.content
         .split("\n")
-        .map((line, i) => <div key={`before-${i}`}>{line || <br />}</div>);
-
-      const afterLines = afterBlock
-        .split("\n")
-        .map((line, i) => <div key={`after-${i}`}>{line || <br />}</div>);
-
-      // Only show placeholder when not editing to remove the blue box
-      return [...beforeLines, ...afterLines];
+        .map((line, i) => <div key={i}>{line || <br />}</div>);
     }
-
-    // If not editing, just return the regular content split by lines
-    return content
+    
+    // Regular content display (no code blocks or currently editing)
+    return message.content
       .split("\n")
       .map((line, i) => <div key={i}>{line || <br />}</div>);
   };
-
-  const contentElements = processMessageContent(message.content);
 
   return (
     <div
@@ -60,7 +50,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </span>
       </div>
       <div className='message-content'>
-        {contentElements}
+        {processMessageContent()}
         {isStreaming && message.content === "" && (
           <div className='typing-indicator'>...</div>
         )}
