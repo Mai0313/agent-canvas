@@ -179,6 +179,7 @@ const App: React.FC = () => {
       <div className='main-content'>
         <ChatBox
           messages={messages}
+          settings={settings}
           onSendMessage={handleSendMessage}
           onMarkdownDetected={handleMarkdownDetected}
           isLoading={isLoading}

@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Message } from '../types';
+import { Message, ModelSetting } from '../types';
 import MessageItem from './MessageItem';
 import { containsMarkdown } from '../utils/markdownUtils';
 
 interface ChatBoxProps {
   messages: Message[];
+  settings: ModelSetting;
   onSendMessage: (content: string) => void;
   onMarkdownDetected: (content: string, messageId: string) => void;
   isLoading: boolean;
@@ -16,6 +17,7 @@ interface ChatBoxProps {
 
 const ChatBox: React.FC<ChatBoxProps> = ({
   messages,
+  settings,
   onSendMessage,
   onMarkdownDetected,
   isLoading,
@@ -52,13 +54,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       setInputValue('');
     }
   };
+  console.log("Model:", settings.model);
 
   return (
     <div className="chat-box">
       <div className="messages-container">
         {messages.length === 0 ? (
           <div className="empty-state">
-            <h2>Start a conversation with GPT-4o</h2>
+            <h2>Start a conversation with {settings.model}</h2>
             <p>Type your message below to begin</p>
           </div>
         ) : (
