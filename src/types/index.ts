@@ -5,10 +5,10 @@ export interface Message {
   timestamp: Date;
 }
 
-export type APIProvider = "openai" | "azure";
+export type APIType = "openai" | "azure";
 
 export interface ModelSettings {
-  provider: APIProvider;
+  api_type: APIType;
   model: string;
   baseUrl: string;
   apiKey: string;

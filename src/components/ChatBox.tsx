@@ -63,9 +63,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           </div>
         ) : (
           messages.map(message => (
-            <MessageItem 
-              key={message.id} 
-              message={message} 
+            <MessageItem
+              key={message.id}
+              message={message}
               isStreaming={streamingMessageId === message.id}
               isEditing={editingMessageId === message.id}
               longestCodeBlockPosition={message.id === editingMessageId ? longestCodeBlockPosition : null}

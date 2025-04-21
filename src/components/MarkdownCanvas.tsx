@@ -27,8 +27,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   useEffect(() => {
     // Add click event listener to detect clicks outside the panel
     const handleClickOutside = (event: MouseEvent) => {
-      if (canvasRef.current && 
-          !canvasRef.current.contains(event.target as Node) && 
+      if (canvasRef.current &&
+          !canvasRef.current.contains(event.target as Node) &&
           !event.target?.toString().includes('code-block-link')) {
         // Only close if we're not clicking on the toggle element itself
         onClose();

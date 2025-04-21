@@ -1,0 +1,73 @@
+default_language_version:
+  python: python3
+
+default_install_hook_types:
+  - pre-commit
+  - post-checkout
+  - post-merge
+  - post-rewrite
+
+default_stages:
+  - pre-commit
+  - post-checkout
+  - post-merge
+  - post-rewrite
+
+repos:
+  - repo: https://github.com/oxsecurity/megalinter
+    rev: v6.8.0 # Git tag specifying the hook, not mega-linter-runner, version
+    hooks:
+      - id: megalinter-incremental # Faster, less thorough
+        stages:
+          - pre-commit
+      - id: megalinter-full # Slower, more thorough
+        stages:
+          - pre-push
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # list of supported hooks: https://pre-commit.com/hooks.html
+      - id: check-added-large-files
+        exclude: poetry.lock|uv.lock
+      - id: check-ast
+      - id: check-yaml
+        exclude: mkdocs.yml
+        args:
+          - --allow-multiple-documents
+      - id: check-toml
+      - id: check-json
+        exclude: .vscode/launch.json
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      # - id: no-commit-to-branch
+      - id: trailing-whitespace
+      - id: fix-byte-order-marker
+        exclude: docs/CNAME
+      - id: mixed-line-ending
+        args:
+          - --fix=lf
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: check-symlinks
+
+  # md formatting
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.22
+    hooks:
+      - id: mdformat
+        args:
+          - --number
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-web
+          - mdformat-ruff
+          - mdformat-config
+          - mdformat-tables
+          - mdformat-footnote
+          - mdformat_frontmatter
+          - mdformat-pyproject
+          - mdformat-mkdocs[recommended]

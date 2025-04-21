@@ -9,8 +9,8 @@ interface MessageItemProps {
   toggleMarkdownCanvas: () => void;
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({ 
-  message, 
+const MessageItem: React.FC<MessageItemProps> = ({
+  message,
   isStreaming = false,
   isEditing = false,
   longestCodeBlockPosition = null,
@@ -22,16 +22,16 @@ const MessageItem: React.FC<MessageItemProps> = ({
       const { start, end } = longestCodeBlockPosition;
       const beforeBlock = content.substring(0, start);
       const afterBlock = content.substring(end);
-      
+
       // Split the text into lines and create elements
-      const beforeLines = beforeBlock.split('\n').map((line, i) => 
+      const beforeLines = beforeBlock.split('\n').map((line, i) =>
         <div key={`before-${i}`}>{line || <br />}</div>
       );
-      
-      const afterLines = afterBlock.split('\n').map((line, i) => 
+
+      const afterLines = afterBlock.split('\n').map((line, i) =>
         <div key={`after-${i}`}>{line || <br />}</div>
       );
-      
+
       // Create the clickable placeholder element - show different text based on open/closed state
       const placeholderElement = (
         <div key="placeholder" className="code-block-placeholder" onClick={toggleMarkdownCanvas}>
@@ -40,10 +40,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
           </span>
         </div>
       );
-      
+
       return [...beforeLines, placeholderElement, ...afterLines];
     }
-    
+
     // If not editing, just return the regular content split by lines
     return content.split('\n').map((line, i) => <div key={i}>{line || <br />}</div>);
   };

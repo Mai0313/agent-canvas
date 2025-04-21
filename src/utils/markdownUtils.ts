@@ -16,14 +16,14 @@ export const containsMarkdown = (text: string): boolean => {
   return markdownPatterns.some(pattern => pattern.test(text));
 };
 
-export const extractLongestCodeBlock = (text: string): { 
-  longestBlock: string; 
+export const extractLongestCodeBlock = (text: string): {
+  longestBlock: string;
   blockPosition: { start: number; end: number } | null;
 } => {
   // Find all code blocks using a more compatible approach than matchAll
   const codeBlockRegex = /```[\s\S]*?```/g;
   const matches: Array<{text: string, index: number}> = [];
-  
+
   let match;
   while ((match = codeBlockRegex.exec(text)) !== null) {
     matches.push({
@@ -31,27 +31,27 @@ export const extractLongestCodeBlock = (text: string): {
       index: match.index
     });
   }
-  
+
   if (matches.length === 0) {
     return { longestBlock: "", blockPosition: null };
   }
-  
+
   // Find the longest code block
   let longestBlockIndex = 0;
   let maxLength = 0;
-  
+
   matches.forEach((match, index) => {
     if (match.text.length > maxLength) {
       maxLength = match.text.length;
       longestBlockIndex = index;
     }
   });
-  
+
   const longestMatch = matches[longestBlockIndex];
   const start = longestMatch.index;
   const end = start + longestMatch.text.length;
-  
-  return { 
+
+  return {
     longestBlock: longestMatch.text,
     blockPosition: { start, end }
   };

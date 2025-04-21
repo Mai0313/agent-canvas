@@ -1,9 +1,9 @@
 import { AzureOpenAI, OpenAI } from "openai";
 import { Message, ModelSettings } from "../types";
 
-// Initialize the appropriate client based on provider
+// Initialize the appropriate client based on api_type
 const createClient = (settings: ModelSettings) => {
-  if (settings.provider === "azure") {
+  if (settings.api_type === "azure") {
     return new AzureOpenAI({
       apiKey: settings.apiKey,
       baseURL: settings.baseUrl + "/openai",
