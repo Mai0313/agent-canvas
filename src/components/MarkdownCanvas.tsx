@@ -140,6 +140,17 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     );
   };
 
+  // Add this new useEffect hook to automatically generate title when opened
+  useEffect(() => {
+    // Generate title automatically when:
+    // 1. The canvas is opened
+    // 2. There is content to analyze
+    // 3. The title is still the default "Code Editor"
+    if (isOpen && editableContent.trim() && title === "Code Editor") {
+      generateTitle();
+    }
+  }, [isOpen, editableContent, title]);
+
   const generateTitle = async () => {
     if (!editableContent.trim()) return;
     
