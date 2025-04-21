@@ -218,6 +218,7 @@ body {
   display: flex;
   flex-direction: column;
   color: #f8f9fa;
+  overflow: hidden; /* Prevent outer scrolling */
 }
 
 .markdown-header {
@@ -247,7 +248,7 @@ body {
 .markdown-content {
   flex: 1;
   padding: 0;
-  overflow-y: auto;
+  overflow: hidden; /* Remove overflow from the content container */
 }
 
 /* BlockNote editor styles */

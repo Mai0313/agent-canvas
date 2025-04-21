@@ -110,8 +110,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     <div 
       className="markdown-canvas" 
       ref={canvasRef}
-      onWheel={handleWheel}
-      style={{ position: "relative" }}
+      style={{ position: "relative", overflow: "hidden" }}
     >
       <div className="markdown-header">
         <h3>Code Editor</h3>
@@ -128,13 +127,14 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
         </div>
       </div>
 
-      <div className="markdown-content">
+      <div className="markdown-content" style={{ overflow: "hidden" }}>
         <textarea
           ref={textareaRef}
           value={editableContent}
           onChange={handleContentChange}
           readOnly={!editMode}
           className={editMode ? "markdown-editor" : "markdown-preview"}
+          onWheel={handleWheel}
           style={{
             width: "100%",
             height: "100%", 
@@ -146,7 +146,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             border: "none",
             outline: editMode ? "1px solid #495057" : "none",
             resize: "none",
-            overflowY: "auto" // Ensure the textarea has its own scrolling
+            overflowY: "auto" // Keep this as the only scrollable element
           }}
         />
       </div>
