@@ -23,6 +23,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [contentFullyLoaded, setContentFullyLoaded] = useState(false);
+  const [shouldGenerateTitle, setShouldGenerateTitle] = useState(false);
 
   // Store scroll position of the parent container
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -30,16 +31,17 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   // Update content when it changes
   useEffect(() => {
     setEditableContent(content);
-
-    // When content changes, first mark as not fully loaded
+    setTitle("Code Editor"); // Reset title on content change
     setContentFullyLoaded(false);
 
-    // Set a small delay to ensure all code blocks are fully rendered
-    const timer = setTimeout(() => {
+    // Set a delay to ensure all code blocks are fully processed
+    const fullLoadTimer = setTimeout(() => {
       setContentFullyLoaded(true);
-    }, 300); // 300ms delay to ensure rendering is complete
+      // Flag that we should generate a new title
+      setShouldGenerateTitle(true);
+    }, 300);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(fullLoadTimer);
   }, [content]);
 
   // Reset copy success message after 2 seconds
@@ -58,6 +60,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     if (isOpen) {
       // Store the current scroll position
       setScrollPosition(window.scrollY || document.documentElement.scrollTop);
+      // Each time the editor opens, we should generate a new title
+      setShouldGenerateTitle(true);
     }
   }, [isOpen]);
 
@@ -99,7 +103,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const handleWheel = (event: React.WheelEvent) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-    
+
     const { scrollTop, scrollHeight, clientHeight } = textarea;
     const isAtTop = scrollTop === 0;
     const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
@@ -120,6 +124,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const handleSave = () => {
     onSave(editableContent);
     setEditMode(false);
+    // Generate new title after saving edits
+    setShouldGenerateTitle(true);
   };
 
   const handleCancel = () => {
@@ -134,13 +140,13 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const handleCopyCode = () => {
     // Clean the content by removing markdown code fence markers
     let cleanContent = content;
-    
+
     // Remove opening code fence with language identifier (```python, ```javascript, etc.)
     cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, '');
-    
+
     // Remove closing code fence
     cleanContent = cleanContent.replace(/\n```\s*$/m, '');
-    
+
     navigator.clipboard.writeText(cleanContent).then(
       () => {
         setCopySuccess(true);
@@ -154,14 +160,15 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   // Wrap generateTitle in useCallback to memoize it
   const generateTitle = useCallback(async () => {
     if (!editableContent.trim()) return;
-    
+
     setIsGeneratingTitle(true);
-    
+    console.log("Generating title via Chat Completion API");
+
     try {
       // Default settings for the API call
       const settings: ModelSetting = {
         api_type: "openai",
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         baseUrl: process.env.BASE_URL || "https://tma.mediatek.inc/tma/sdk/api",
         apiKey: process.env.API_KEY || "srv_dvc_tma001",
         temperature: 0.7,
@@ -192,7 +199,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 
       // Clean up the title (remove quotes if present)
       generatedTitle = generatedTitle.replace(/^["']|["']$/g, '').trim();
-      
+
       if (generatedTitle) {
         setTitle(generatedTitle);
       }
@@ -200,20 +207,40 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       console.error("Error generating title:", error);
     } finally {
       setIsGeneratingTitle(false);
+      // Reset the flag after generation attempt
+      setShouldGenerateTitle(false);
     }
   }, [editableContent]); // Add editableContent as a dependency
 
-  // Update the useEffect to include contentFullyLoaded in dependencies
+  // Effect for title generation based on shouldGenerateTitle flag
   useEffect(() => {
-    // Generate title automatically when:
-    // 1. The canvas is opened
-    // 2. There is content to analyze
-    // 3. The title is still the default "Code Editor"
-    // 4. Content is fully loaded and rendered
-    if (isOpen && editableContent.trim() && title === "Code Editor" && contentFullyLoaded) {
-      generateTitle();
+    // Only attempt to generate a title when:
+    // 1. The shouldGenerateTitle flag is true
+    // 2. Content is fully loaded
+    // 3. The canvas is open
+    // 4. There is content to analyze
+    // 5. We're not already generating a title
+    if (
+      shouldGenerateTitle && 
+      contentFullyLoaded && 
+      isOpen && 
+      editableContent.trim() && 
+      !isGeneratingTitle
+    ) {
+      const titleTimer = setTimeout(() => {
+        generateTitle();
+      }, 100);
+
+      return () => clearTimeout(titleTimer);
     }
-  }, [isOpen, editableContent, title, generateTitle, contentFullyLoaded]);
+  }, [
+    shouldGenerateTitle, 
+    contentFullyLoaded, 
+    isOpen, 
+    editableContent, 
+    isGeneratingTitle, 
+    generateTitle
+  ]);
 
   if (!isOpen) return null;
 
@@ -250,7 +277,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
           </button>
           <h3>{title}</h3>
           <button 
-            onClick={generateTitle} 
+            onClick={() => setShouldGenerateTitle(true)}
             disabled={isGeneratingTitle}
             style={{ 
               marginLeft: "10px", 
