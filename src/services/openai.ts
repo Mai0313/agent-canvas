@@ -42,33 +42,6 @@ export const sendChatCompletion = async (
       max_tokens: settings.maxTokens,
     });
 
-    // const assistant = await client.beta.assistants.create({
-    //   name: "assistant",
-    //   model: settings.model,
-    //   description: "A helpful assistant",
-    //   instructions: "You are a helpful assistant.",
-    //   temperature: settings.temperature,
-    //   metadata: {
-    //     "backend_id": "default"
-    //   }
-    // })
-
-    // const thread = await client.beta.threads.create()
-    // const message = await client.beta.threads.messages.create(
-    //   thread.id,
-    //   {
-    //     role: "user",
-    //     content: formattedMessages[0].content,
-    //   }
-    // );
-    // const run = await client.beta.threads.runs.createAndPoll(
-    //   thread.id,
-    //   {
-    //     assistant_id: assistant.id,
-    //     instructions: "Please Help the user to answer the question",
-    //   }
-    // );
-
     return response.choices[0].message.content || "";
   } catch (error) {
     console.error("Error calling AI API:", error);
