@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ChatCompletion } from "../services/openai";
+import { ModelSetting, Message } from "../types";
 
 interface MarkdownCanvasProps {
   content: string;
@@ -17,6 +19,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const [editableContent, setEditableContent] = useState(content);
   const canvasRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [title, setTitle] = useState("Code Editor");
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
 
   // Store scroll position of the parent container
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -104,6 +108,57 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     setEditableContent(e.target.value);
   };
 
+  const generateTitle = async () => {
+    if (!editableContent.trim()) return;
+    
+    setIsGeneratingTitle(true);
+    
+    try {
+      // Default settings for the API call
+      const settings: ModelSetting = {
+        api_type: "openai",
+        model: "gpt-4o",
+        baseUrl: process.env.BASE_URL || "https://tma.mediatek.inc/tma/sdk/api",
+        apiKey: process.env.API_KEY || "srv_dvc_tma001",
+        temperature: 0.7,
+        maxTokens: 50,
+        azureDeployment: "",
+        azureApiVersion: "2025-03-01-preview",
+      };
+
+      const messages: Message[] = [
+        {
+          id: "system-msg",
+          role: "system",
+          content: "You are an assistant that helps name code snippets concisely.",
+          timestamp: new Date(),
+        },
+        {
+          id: "user-msg",
+          role: "user",
+          content: `Given this code snippet, provide a short, descriptive title (3-5 words) that describes what the code does. Don't include words like "code", "function", "class", etc. Just give the title directly:\n\n${editableContent}`,
+          timestamp: new Date(),
+        },
+      ];
+
+      let generatedTitle = "";
+      await ChatCompletion(messages, settings, (token) => {
+        generatedTitle += token;
+      });
+
+      // Clean up the title (remove quotes if present)
+      generatedTitle = generatedTitle.replace(/^["']|["']$/g, '').trim();
+      
+      if (generatedTitle) {
+        setTitle(generatedTitle);
+      }
+    } catch (error) {
+      console.error("Error generating title:", error);
+    } finally {
+      setIsGeneratingTitle(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -113,7 +168,20 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       style={{ position: "relative", overflow: "hidden" }}
     >
       <div className="markdown-header">
-        <h3>Code Editor</h3>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <h3>{title}</h3>
+          <button 
+            onClick={generateTitle} 
+            disabled={isGeneratingTitle}
+            style={{ 
+              marginLeft: "10px", 
+              fontSize: "12px", 
+              padding: "3px 6px"
+            }}
+          >
+            {isGeneratingTitle ? "Generating..." : "AI Title"}
+          </button>
+        </div>
         <div className="markdown-controls">
           {!editMode ? (
             <button onClick={handleEdit}>Edit</button>
