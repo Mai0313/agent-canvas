@@ -110,7 +110,9 @@ export const ChatCompletion = async (
   }
 };
 
-// 為了向後兼容，保留原有的 streamChatCompletion 函數，但內部直接調用 ChatCompletion
+/**
+ * @deprecated use ChatCompletion instead
+ */
 export const streamChatCompletion = async (
   messages: Message[],
   settings: ModelSetting,

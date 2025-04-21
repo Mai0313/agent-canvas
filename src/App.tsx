@@ -4,7 +4,7 @@ import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
 import { Message, ModelSetting } from "./types";
-import { streamChatCompletion } from "./services/openai";
+import { ChatCompletion } from "./services/openai";
 import { extractLongestCodeBlock } from "./utils/markdownUtils";
 import "./styles.css";
 
@@ -62,25 +62,21 @@ const App: React.FC = () => {
       setMessages((prev) => [...prev, assistantMessage]);
       setStreamingMessageId(assistantMessageId);
 
-      await streamChatCompletion(
-        [...messages, userMessage],
-        settings,
-        (token) => {
-          setMessages((prev) => {
-            const updatedMessages = [...prev];
-            const messageIndex = updatedMessages.findIndex(
-              (m) => m.id === assistantMessageId,
-            );
-            if (messageIndex !== -1) {
-              updatedMessages[messageIndex] = {
-                ...updatedMessages[messageIndex],
-                content: updatedMessages[messageIndex].content + token,
-              };
-            }
-            return updatedMessages;
-          });
-        },
-      );
+      await ChatCompletion([...messages, userMessage], settings, (token) => {
+        setMessages((prev) => {
+          const updatedMessages = [...prev];
+          const messageIndex = updatedMessages.findIndex(
+            (m) => m.id === assistantMessageId,
+          );
+          if (messageIndex !== -1) {
+            updatedMessages[messageIndex] = {
+              ...updatedMessages[messageIndex],
+              content: updatedMessages[messageIndex].content + token,
+            };
+          }
+          return updatedMessages;
+        });
+      });
     } catch (err: any) {
       setError(
         err.message ||
