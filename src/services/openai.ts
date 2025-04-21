@@ -35,14 +35,14 @@ export const sendChatCompletion = async (
 
     console.log("Sending request to:", settings.baseUrl);
 
-    const response = await client.chat.completions.create({
+    const responses = await client.chat.completions.create({
       model: settings.model,
       messages: formattedMessages,
       temperature: settings.temperature,
       max_tokens: settings.maxTokens,
     });
 
-    return response.choices[0].message.content || "";
+    return responses.choices[0].message.content || "";
   } catch (error) {
     console.error("Error calling AI API:", error);
     throw error;
@@ -64,7 +64,7 @@ export const streamChatCompletion = async (
 
     console.log("Sending streaming request to:", settings.baseUrl);
 
-    const stream = await client.chat.completions.create({
+    const responses = await client.chat.completions.create({
       model: settings.model,
       messages: formattedMessages,
       temperature: settings.temperature,
@@ -72,7 +72,7 @@ export const streamChatCompletion = async (
       stream: true,
     });
 
-    for await (const chunk of stream) {
+    for await (const chunk of responses) {
       const content = chunk.choices[0]?.delta?.content || "";
       if (content) {
         onToken(content);
