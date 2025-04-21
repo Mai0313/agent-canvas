@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ChatCompletion } from "../services/openai";
 import { ModelSetting, Message } from "../types";
 
@@ -140,18 +140,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     );
   };
 
-  // Add this new useEffect hook to automatically generate title when opened
-  useEffect(() => {
-    // Generate title automatically when:
-    // 1. The canvas is opened
-    // 2. There is content to analyze
-    // 3. The title is still the default "Code Editor"
-    if (isOpen && editableContent.trim() && title === "Code Editor") {
-      generateTitle();
-    }
-  }, [isOpen, editableContent, title]);
-
-  const generateTitle = async () => {
+  // Wrap generateTitle in useCallback to memoize it
+  const generateTitle = useCallback(async () => {
     if (!editableContent.trim()) return;
     
     setIsGeneratingTitle(true);
@@ -200,7 +190,18 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     } finally {
       setIsGeneratingTitle(false);
     }
-  };
+  }, [editableContent]); // Add editableContent as a dependency
+
+  // Update the useEffect to include generateTitle in dependencies
+  useEffect(() => {
+    // Generate title automatically when:
+    // 1. The canvas is opened
+    // 2. There is content to analyze
+    // 3. The title is still the default "Code Editor"
+    if (isOpen && editableContent.trim() && title === "Code Editor") {
+      generateTitle();
+    }
+  }, [isOpen, editableContent, title, generateTitle]);
 
   if (!isOpen) return null;
 
