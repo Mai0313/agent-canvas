@@ -1,5 +1,5 @@
-import React, { ReactNode } from 'react';
-import { Message } from '../types';
+import React, { ReactNode } from "react";
+import { Message } from "../types";
 
 interface MessageItemProps {
   message: Message;
@@ -14,7 +14,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   isStreaming = false,
   isEditing = false,
   longestCodeBlockPosition = null,
-  toggleMarkdownCanvas
+  toggleMarkdownCanvas,
 }) => {
   // Function to replace the longest code block with a placeholder when message is being edited
   const processMessageContent = (content: string): ReactNode[] => {
@@ -24,36 +24,46 @@ const MessageItem: React.FC<MessageItemProps> = ({
       const afterBlock = content.substring(end);
 
       // Split the text into lines and create elements
-      const beforeLines = beforeBlock.split('\n').map((line, i) =>
-        <div key={`before-${i}`}>{line || <br />}</div>
-      );
+      const beforeLines = beforeBlock
+        .split("\n")
+        .map((line, i) => <div key={`before-${i}`}>{line || <br />}</div>);
 
-      const afterLines = afterBlock.split('\n').map((line, i) =>
-        <div key={`after-${i}`}>{line || <br />}</div>
-      );
+      const afterLines = afterBlock
+        .split("\n")
+        .map((line, i) => <div key={`after-${i}`}>{line || <br />}</div>);
 
       // Only show placeholder when not editing to remove the blue box
       return [...beforeLines, ...afterLines];
     }
 
     // If not editing, just return the regular content split by lines
-    return content.split('\n').map((line, i) => <div key={i}>{line || <br />}</div>);
+    return content
+      .split("\n")
+      .map((line, i) => <div key={i}>{line || <br />}</div>);
   };
 
   const contentElements = processMessageContent(message.content);
 
   return (
-    <div className={`message ${message.role} ${isStreaming ? 'streaming' : ''}`}>
-      <div className="message-header">
-        <span className="role">{message.role === 'assistant' ? 'AI' : 'You'}</span>
-        <span className="timestamp">
+    <div
+      className={`message ${message.role} ${isStreaming ? "streaming" : ""}`}
+    >
+      <div className='message-header'>
+        <span className='role'>
+          {message.role === "assistant" ? "AI" : "You"}
+        </span>
+        <span className='timestamp'>
           {message.timestamp.toLocaleTimeString()}
-          {isStreaming && <span className="streaming-indicator"> (typing...)</span>}
+          {isStreaming && (
+            <span className='streaming-indicator'> (typing...)</span>
+          )}
         </span>
       </div>
-      <div className="message-content">
+      <div className='message-content'>
         {contentElements}
-        {isStreaming && message.content === '' && <div className="typing-indicator">...</div>}
+        {isStreaming && message.content === "" && (
+          <div className='typing-indicator'>...</div>
+        )}
       </div>
     </div>
   );

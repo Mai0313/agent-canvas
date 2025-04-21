@@ -2,33 +2,35 @@ export const containsMarkdown = (text: string): boolean => {
   // Basic detection of markdown-like content
   const markdownPatterns = [
     /^#+\s+.+$/m, // Headers
-    /\*\*.+\*\*/,  // Bold
-    /\*.+\*/,      // Italic
-    /^>\s+.+$/m,   // Blockquotes
+    /\*\*.+\*\*/, // Bold
+    /\*.+\*/, // Italic
+    /^>\s+.+$/m, // Blockquotes
     /^```[\s\S]*?```$/m, // Code blocks
     /^\s*[-*+]\s+.+$/m, // Lists
     /^\s*\d+\.\s+.+$/m, // Numbered lists
-    /\[.+\]\(.+\)/,   // Links
-    /!\[.+\]\(.+\)/,  // Images
-    /^[\s-]{3,}$/m    // Horizontal rules
+    /\[.+\]\(.+\)/, // Links
+    /!\[.+\]\(.+\)/, // Images
+    /^[\s-]{3,}$/m, // Horizontal rules
   ];
 
-  return markdownPatterns.some(pattern => pattern.test(text));
+  return markdownPatterns.some((pattern) => pattern.test(text));
 };
 
-export const extractLongestCodeBlock = (text: string): {
+export const extractLongestCodeBlock = (
+  text: string,
+): {
   longestBlock: string;
   blockPosition: { start: number; end: number } | null;
 } => {
   // Find all code blocks using a more compatible approach than matchAll
   const codeBlockRegex = /```[\s\S]*?```/g;
-  const matches: Array<{text: string, index: number}> = [];
+  const matches: Array<{ text: string; index: number }> = [];
 
   let match;
   while ((match = codeBlockRegex.exec(text)) !== null) {
     matches.push({
       text: match[0],
-      index: match.index
+      index: match.index,
     });
   }
 
@@ -53,6 +55,6 @@ export const extractLongestCodeBlock = (text: string): {
 
   return {
     longestBlock: longestMatch.text,
-    blockPosition: { start, end }
+    blockPosition: { start, end },
   };
 };
