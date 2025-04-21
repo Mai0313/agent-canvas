@@ -28,6 +28,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isComposing, setIsComposing] = useState(false);
 
   useEffect(() => {
     scrollToBottom();
@@ -95,11 +96,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           placeholder='Type your message...'
           rows={3}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            // Only handle Enter key when not in IME composition
+            if (e.key === "Enter" && !e.shiftKey && !isComposing) {
               e.preventDefault();
               handleSubmit(e);
             }
           }}
+          onCompositionStart={() => setIsComposing(true)}
+          onCompositionEnd={() => setIsComposing(false)}
           disabled={isLoading}
         />
         <button type='submit' disabled={!inputValue.trim() || isLoading}>
