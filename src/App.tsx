@@ -22,7 +22,6 @@ const App: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(true);
 
   // Markdown canvas state
   const [markdownContent, setMarkdownContent] = useState<string>("");
@@ -158,22 +157,8 @@ const App: React.FC = () => {
 
   return (
     <div className='app'>
-      <div
-        className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""}`}
-        onMouseEnter={() => setIsSidebarCollapsed(false)}
-        onMouseLeave={() => setIsSidebarCollapsed(true)}
-      >
-        <div
-          className='sidebar-toggle'
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        >
-          {isSidebarCollapsed ? "⚙" : "◀"}
-        </div>
-        <ModelSettings
-          settings={settings}
-          onSettingsChange={setSettings}
-          isCollapsed={isSidebarCollapsed}
-        />
+      <div className='sidebar'>
+        <ModelSettings settings={settings} onSettingsChange={setSettings} />
       </div>
 
       <div className='main-content'>

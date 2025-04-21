@@ -16,7 +16,7 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text-color);
   background-color: var(--bg-color);
   line-height: 1.6;
@@ -28,49 +28,24 @@ body {
   position: relative;
 }
 
+/* Update the sidebar styling */
 .sidebar {
-  width: 300px;
+  width: 250px;
   background-color: var(--sidebar-color);
   border-right: 1px solid var(--border-color);
-  padding: 20px;
+  padding: 15px;
   overflow-y: auto;
-  transition: all 0.3s ease;
-  position: relative;
   z-index: 100;
 }
 
-.sidebar.collapsed {
-  width: 50px;
-  padding: 10px 5px;
-  overflow: hidden;
+.model-settings {
+  padding: 10px 0;
 }
 
-.sidebar-toggle {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  cursor: pointer;
-  background: var(--primary-color);
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  z-index: 2;
-}
-
-.sidebar.collapsed .model-settings h3 {
-  text-align: center;
-  margin: 10px auto;
-  cursor: pointer;
-  font-size: 20px; /* Larger gear icon */
-}
-
-.sidebar.collapsed .settings-group {
-  display: none;
+.model-settings h3 {
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: var(--text-color);
 }
 
 .main-content {
@@ -78,17 +53,6 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-}
-
-.model-settings {
-  padding: 10px;
-}
-
-.model-settings h3 {
-  margin-bottom: 20px;
-  font-size: 18px;
-  color: var(--text-color);
-  transition: all 0.3s ease;
 }
 
 .settings-group {
@@ -164,9 +128,15 @@ body {
 }
 
 @keyframes blink {
-  0% { opacity: 0.2; }
-  50% { opacity: 1; }
-  100% { opacity: 0.2; }
+  0% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
 }
 
 .message-header {
@@ -278,7 +248,7 @@ body {
   padding: 15px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 14px;
   resize: none;
 }

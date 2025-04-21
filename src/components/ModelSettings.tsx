@@ -5,13 +5,11 @@ import { fetchModels } from "../services/openai";
 interface ModelSettingsProps {
   settings: ModelSetting;
   onSettingsChange: (settings: ModelSetting) => void;
-  isCollapsed: boolean;
 }
 
 const ModelSettings: React.FC<ModelSettingsProps> = ({
   settings,
   onSettingsChange,
-  isCollapsed,
 }) => {
   const [models, setModels] = useState<Array<{ id: string }>>([]);
   const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
@@ -53,28 +51,24 @@ const ModelSettings: React.FC<ModelSettingsProps> = ({
 
   return (
     <div className='model-settings'>
-      <h3>{isCollapsed ? "⚙" : "Model Settings"}</h3>
+      <h3>Model Settings</h3>
 
-      {!isCollapsed && (
-        <>
-          <div className='settings-group'>
-            <label>Model</label>
-            <select name='model' value={settings.model} onChange={handleChange}>
-              {isLoadingModels ? (
-                <option value=''>Loading models...</option>
-              ) : models.length > 0 ? (
-                models.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.id}
-                  </option>
-                ))
-              ) : (
-                <option value='gpt-4o'>GPT-4o</option>
-              )}
-            </select>
-          </div>
-        </>
-      )}
+      <div className='settings-group'>
+        <label>Model</label>
+        <select name='model' value={settings.model} onChange={handleChange}>
+          {isLoadingModels ? (
+            <option value=''>Loading models...</option>
+          ) : models.length > 0 ? (
+            models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.id}
+              </option>
+            ))
+          ) : (
+            <option value='gpt-4o'>GPT-4o</option>
+          )}
+        </select>
+      </div>
     </div>
   );
 };
