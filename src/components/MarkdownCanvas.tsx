@@ -22,6 +22,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const [title, setTitle] = useState("Code Editor");
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [contentFullyLoaded, setContentFullyLoaded] = useState(false);
 
   // Store scroll position of the parent container
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -29,6 +30,16 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   // Update content when it changes
   useEffect(() => {
     setEditableContent(content);
+
+    // When content changes, first mark as not fully loaded
+    setContentFullyLoaded(false);
+
+    // Set a small delay to ensure all code blocks are fully rendered
+    const timer = setTimeout(() => {
+      setContentFullyLoaded(true);
+    }, 300); // 300ms delay to ensure rendering is complete
+
+    return () => clearTimeout(timer);
   }, [content]);
 
   // Reset copy success message after 2 seconds
@@ -192,16 +203,17 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     }
   }, [editableContent]); // Add editableContent as a dependency
 
-  // Update the useEffect to include generateTitle in dependencies
+  // Update the useEffect to include contentFullyLoaded in dependencies
   useEffect(() => {
     // Generate title automatically when:
     // 1. The canvas is opened
     // 2. There is content to analyze
     // 3. The title is still the default "Code Editor"
-    if (isOpen && editableContent.trim() && title === "Code Editor") {
+    // 4. Content is fully loaded and rendered
+    if (isOpen && editableContent.trim() && title === "Code Editor" && contentFullyLoaded) {
       generateTitle();
     }
-  }, [isOpen, editableContent, title, generateTitle]);
+  }, [isOpen, editableContent, title, generateTitle, contentFullyLoaded]);
 
   if (!isOpen) return null;
 

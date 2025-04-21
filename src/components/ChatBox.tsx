@@ -91,7 +91,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
       <form className='chat-input-form' onSubmit={handleSubmit}>
         <textarea
-          value={inputValue}
+          value={inputValue || "幫我寫 python snake game"}  // For Development
           onChange={(e) => setInputValue(e.target.value)}
           placeholder='Type your message...'
           rows={3}
