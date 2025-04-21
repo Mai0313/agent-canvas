@@ -27,7 +27,9 @@ const App: React.FC = () => {
   const [markdownContent, setMarkdownContent] = useState<string>("");
   const [isMarkdownCanvasOpen, setIsMarkdownCanvasOpen] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
+    null,
+  );
 
   // State to track code block position
   const [longestCodeBlockPosition, setLongestCodeBlockPosition] = useState<{

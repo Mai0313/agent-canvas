@@ -20,14 +20,14 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const processMessageContent = (): ReactNode[] => {
     // Check if there's a code block in the message
     const hasCodeBlock = message.content.includes("```");
-    
+
     if (hasCodeBlock && !isEditing) {
       // Split the message content by lines for better rendering
       return message.content
         .split("\n")
         .map((line, i) => <div key={i}>{line || <br />}</div>);
     }
-    
+
     // Regular content display (no code blocks or currently editing)
     return message.content
       .split("\n")
