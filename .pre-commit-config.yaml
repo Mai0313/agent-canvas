@@ -14,11 +14,6 @@ default_stages:
   - post-rewrite
 
 repos:
-  - repo: https://github.com/oxsecurity/megalinter
-    rev: v8.5.0
-    hooks:
-      - id: megalinter-incremental
-
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
