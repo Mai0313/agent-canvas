@@ -7,7 +7,7 @@ export interface Message {
 
 export type APIType = "openai" | "azure";
 
-export interface ModelSettings {
+export interface ModelSetting {
   api_type: APIType;
   model: string;
   baseUrl: string;

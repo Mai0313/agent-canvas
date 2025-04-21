@@ -3,14 +3,14 @@ import { v4 as uuidv4 } from "uuid";
 import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
-import { Message, ModelSettings as ModelSettingsType } from "./types";
+import { Message, ModelSetting } from "./types";
 import { streamChatCompletion } from "./services/openai";
 import { extractLongestCodeBlock } from "./utils/markdownUtils";
 import "./styles.css";
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [settings, setSettings] = useState<ModelSettingsType>({
+  const [settings, setSettings] = useState<ModelSetting>({
     api_type: "openai",
     model: "gpt-4o",
     baseUrl: process.env.BASE_URL || "https://tma.mediatek.inc/tma/sdk/api",
