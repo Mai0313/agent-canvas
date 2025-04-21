@@ -6,7 +6,6 @@ A modern, feature-rich chatbot interface for interacting with AI models like GPT
 
 Agent Canvas is an interactive web application that provides a clean interface for conversations with AI models. It features real-time streaming responses, markdown support, and a specialized code/markdown editor canvas that enhances the experience of working with code snippets and structured content.
 
-![Agent Canvas Screenshot]
 ![Agent Canvas](assets/image.png)
 
 ## Features
