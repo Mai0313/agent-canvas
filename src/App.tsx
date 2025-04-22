@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
-import { Message, ModelSetting } from "./types";
+import { Message, ModelSetting, APIType } from "./types";
 import { ChatCompletion } from "./services/openai";
 import { extractLongestCodeBlock } from "./utils/markdownUtils";
 import "./styles.css";
@@ -11,17 +11,18 @@ import "./styles.css";
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [settings, setSettings] = useState<ModelSetting>({
-    api_type: "openai",
+    api_type: (process.env.REACT_APP_API_TYPE as APIType) || "openai",
     model: "gpt-4o",
-    baseUrl: process.env.BASE_URL || "https://tma.mediatek.inc/tma/sdk/api",
-    apiKey: process.env.API_KEY || "srv_dvc_tma001",
-    temperature: parseFloat(process.env.TEMPERATURE || "0.7"),
-    maxTokens: parseInt(process.env.MAX_TOKENS || "2048", 10),
-    azureDeployment: process.env.AZURE_DEPLOYMENT || "",
-    azureApiVersion: process.env.AZURE_API_VERSION || "2025-03-01-preview",
+    baseUrl: process.env.REACT_APP_BASE_URL || "",
+    apiKey: process.env.REACT_APP_API_KEY || "",
+    temperature: parseFloat(process.env.REACT_APP_TEMPERATURE || "0.7"),
+    maxTokens: parseInt(process.env.REACT_APP_MAX_TOKENS || "2048", 10),
+    azureDeployment: process.env.REACT_APP_AZURE_DEPLOYMENT || "",
+    azureApiVersion: process.env.REACT_APP_AZURE_API_VERSION || "2025-03-01-preview",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [threadId, setThreadId] = useState<string>(uuidv4());
 
   // Markdown canvas state for BlockNote editor
   const [markdownContent, setMarkdownContent] = useState<string>("");
@@ -37,7 +38,42 @@ const App: React.FC = () => {
     end: number;
   } | null>(null);
 
+  // Memoize generateNewThreadId to avoid dependency issues
+  const generateNewThreadId = useCallback(() => {
+    // Generate UUID and remove all hyphens, then take substring
+    const newThreadId = "thread_dvc_" + uuidv4().replace(/-/g, '').substring(0, 16);
+    setThreadId(newThreadId);
+
+    // Update URL with the new thread ID without page reload
+    const url = new URL(window.location.href);
+    url.searchParams.set("thread_id", newThreadId);
+    window.history.pushState({ threadId: newThreadId }, "", url.toString());
+
+    // Optionally clear messages to start a fresh conversation
+    setMessages([]);
+
+    // Close any open markdown canvas
+    if (isMarkdownCanvasOpen) {
+      handleCloseMarkdownCanvas();
+    }
+  }, [isMarkdownCanvasOpen]); // Add dependencies here
+
+  // Generate a new thread ID and update URL on component mount
+  useEffect(() => {
+    generateNewThreadId();
+  }, [generateNewThreadId]);
+
+  // Add button/functionality to start a new thread
+  const startNewThread = () => {
+    generateNewThreadId();
+  };
+
   const handleSendMessage = async (content: string) => {
+    // If this is the first message of a conversation, ensure we have a thread ID
+    if (messages.length === 0 && !threadId) {
+      generateNewThreadId();
+    }
+
     const userMessage: Message = {
       id: uuidv4(),
       role: "user",
@@ -99,10 +135,19 @@ const App: React.FC = () => {
       const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
 
       if (longestBlock && blockPosition) {
-        setMarkdownContent(longestBlock);
-        setEditingMessageId(messageId);
-        setLongestCodeBlockPosition(blockPosition);
-        setIsMarkdownCanvasOpen(true);
+        // Close any existing canvas first to reset states
+        if (isMarkdownCanvasOpen) {
+          setIsMarkdownCanvasOpen(false);
+          setEditingMessageId(null);
+        }
+
+        // Short delay to ensure smooth transition between different messages' code blocks
+        setTimeout(() => {
+          setMarkdownContent(longestBlock);
+          setEditingMessageId(messageId);
+          setLongestCodeBlockPosition(blockPosition);
+          setIsMarkdownCanvasOpen(true);
+        }, 50);
       }
     }
   };
@@ -158,6 +203,12 @@ const App: React.FC = () => {
   return (
     <div className='app'>
       <div className='sidebar'>
+        <div className='thread-controls'>
+          <button className='new-thread-btn' onClick={startNewThread}>
+            New Conversation
+          </button>
+          <div className='thread-id'>Thread ID: {threadId}</div>
+        </div>
         <ModelSettings settings={settings} onSettingsChange={setSettings} />
       </div>
 

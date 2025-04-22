@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ChatCompletion } from "../services/openai";
-import { ModelSetting, Message } from "../types";
+import { ModelSetting, Message, APIType } from "../types";
 
 interface MarkdownCanvasProps {
   content: string;
@@ -167,14 +167,14 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     try {
       // Default settings for the API call
       const settings: ModelSetting = {
-        api_type: "openai",
+        api_type: (process.env.REACT_APP_API_TYPE as APIType) || "openai",
         model: "gpt-4o-mini",
-        baseUrl: process.env.BASE_URL || "https://tma.mediatek.inc/tma/sdk/api",
-        apiKey: process.env.API_KEY || "srv_dvc_tma001",
-        temperature: 0.7,
-        maxTokens: 50,
-        azureDeployment: "",
-        azureApiVersion: "2025-03-01-preview",
+        baseUrl: process.env.REACT_APP_BASE_URL || "",
+        apiKey: process.env.REACT_APP_API_KEY || "",
+        temperature: parseFloat(process.env.REACT_APP_TEMPERATURE || "0.7"),
+        maxTokens: parseInt(process.env.REACT_APP_MAX_TOKENS || "2048", 10),
+        azureDeployment: process.env.REACT_APP_AZURE_DEPLOYMENT || "",
+        azureApiVersion: process.env.REACT_APP_AZURE_API_VERSION || "2025-03-01-preview",
       };
 
       const messages: Message[] = [

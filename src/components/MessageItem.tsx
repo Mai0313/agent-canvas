@@ -21,14 +21,52 @@ const MessageItem: React.FC<MessageItemProps> = ({
     // Check if there's a code block in the message
     const hasCodeBlock = message.content.includes("```");
 
-    if (hasCodeBlock && !isEditing) {
-      // Split the message content by lines for better rendering
-      return message.content
-        .split("\n")
-        .map((line, i) => <div key={i}>{line || <br />}</div>);
+    // If this message has a code block that's currently being displayed in the canvas
+    if (hasCodeBlock && isEditing && longestCodeBlockPosition) {
+      // Create message parts: before the code block, a placeholder, and after the code block
+      const beforeCode = message.content.substring(
+        0,
+        longestCodeBlockPosition.start,
+      );
+      const afterCode = message.content.substring(longestCodeBlockPosition.end);
+
+      // Create an array of elements
+      const elements: ReactNode[] = [];
+
+      // Add lines before the code block
+      if (beforeCode.trim()) {
+        elements.push(
+          ...beforeCode
+            .split("\n")
+            .map((line, i) => <div key={`before-${i}`}>{line || <br />}</div>),
+        );
+      }
+
+      // Add the code block placeholder with a button to toggle the canvas
+      elements.push(
+        <div className='code-block-placeholder' key='placeholder'>
+          <button
+            className='code-block-link active'
+            onClick={toggleMarkdownCanvas}
+          >
+            <span>Code is displayed in editor →</span>
+          </button>
+        </div>,
+      );
+
+      // Add lines after the code block
+      if (afterCode.trim()) {
+        elements.push(
+          ...afterCode
+            .split("\n")
+            .map((line, i) => <div key={`after-${i}`}>{line || <br />}</div>),
+        );
+      }
+
+      return elements;
     }
 
-    // Regular content display (no code blocks or currently editing)
+    // Regular content display (no code blocks or not currently editing)
     return message.content
       .split("\n")
       .map((line, i) => <div key={i}>{line || <br />}</div>);
