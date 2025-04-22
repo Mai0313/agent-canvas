@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
 import { Message, ModelSetting } from "./types";
 import { ChatCompletion } from "./services/openai";
-import { extractLongestCodeBlock } from "./utils/markdownUtils";
+import { extractLongestCodeBlock, detectInProgressCodeBlock } from "./utils/markdownUtils";
 import { getDefaultModelSettings } from "./utils/modelUtils";
 import "./styles.css";
 
@@ -27,10 +27,146 @@ const App: React.FC = () => {
   );
 
   // State to track code block position
-  const [longestCodeBlockPosition, setLongestCodeBlockPosition] = useState<{
+  const [codeBlockPosition, setCodeBlockPosition] = useState<{
     start: number;
     end: number;
   } | null>(null);
+  
+  // Track active code block detection
+  const [codeBlockDetected, setCodeBlockDetected] = useState(false);
+
+  // Resizable layout states
+  const [sidebarWidth, setSidebarWidth] = useState(250); // Default sidebar width
+  const [markdownWidth, setMarkdownWidth] = useState(40); // Default 40% width for markdown
+  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  const [isResizingMarkdown, setIsResizingMarkdown] = useState(false);
+  
+  // Refs for resizable elements
+  const appContainerRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const mainContainerRef = useRef<HTMLDivElement>(null);
+  const markdownContainerRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const sidebarResizerRef = useRef<HTMLDivElement>(null);
+  const markdownResizerRef = useRef<HTMLDivElement>(null);
+
+  // Monitor the currently streaming message for code blocks
+  useEffect(() => {
+    if (!streamingMessageId) return;
+    
+    const message = messages.find(m => m.id === streamingMessageId);
+    if (!message) return;
+    
+    // Check for in-progress code blocks with 5+ lines
+    const { codeBlock, blockPosition, lineCount } = detectInProgressCodeBlock(message.content, 5);
+    
+    // If a code block with 5+ lines is found and we haven't already detected one or have a different one
+    if (codeBlock && blockPosition && lineCount >= 5 && !codeBlockDetected) {
+      // Open the markdown editor with this code block
+      setMarkdownContent(codeBlock);
+      setEditingMessageId(streamingMessageId);
+      setCodeBlockPosition(blockPosition);
+      setIsMarkdownCanvasOpen(true);
+      setCodeBlockDetected(true);
+    }
+    
+    // If we have an active code block that's being updated
+    if (codeBlockDetected && editingMessageId === streamingMessageId && codeBlockPosition) {
+      // Get the updated in-progress code block
+      const updatedBlock = message.content.substring(codeBlockPosition.start);
+      setMarkdownContent(updatedBlock);
+      setCodeBlockPosition({
+        start: codeBlockPosition.start,
+        end: message.content.length
+      });
+    }
+  }, [messages, streamingMessageId, codeBlockDetected, editingMessageId, codeBlockPosition]);
+
+  // Reset code block detection when streaming ends
+  useEffect(() => {
+    if (!streamingMessageId) {
+      setCodeBlockDetected(false);
+    }
+  }, [streamingMessageId]);
+
+  // Setup sidebar resizer
+  useEffect(() => {
+    const sidebarResizer = sidebarResizerRef.current;
+    if (!sidebarResizer) return;
+    
+    const onMouseDown = (e: MouseEvent) => {
+      e.preventDefault();
+      setIsResizingSidebar(true);
+      document.documentElement.style.cursor = 'col-resize';
+    };
+    
+    sidebarResizer.addEventListener('mousedown', onMouseDown);
+    
+    return () => {
+      sidebarResizer.removeEventListener('mousedown', onMouseDown);
+    };
+  }, []);
+  
+  // Setup markdown resizer
+  useEffect(() => {
+    const markdownResizer = markdownResizerRef.current;
+    if (!markdownResizer || !isMarkdownCanvasOpen) return;
+    
+    const onMouseDown = (e: MouseEvent) => {
+      e.preventDefault();
+      setIsResizingMarkdown(true);
+      document.documentElement.style.cursor = 'col-resize';
+    };
+    
+    markdownResizer.addEventListener('mousedown', onMouseDown);
+    
+    return () => {
+      markdownResizer.removeEventListener('mousedown', onMouseDown);
+    };
+  }, [isMarkdownCanvasOpen]);
+  
+  // Handle resizing
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (isResizingSidebar) {
+        const newWidth = e.clientX;
+        if (newWidth >= 200 && newWidth <= 350) {
+          setSidebarWidth(newWidth);
+        }
+      } else if (isResizingMarkdown && isMarkdownCanvasOpen) {
+        const containerWidth = mainContainerRef.current?.clientWidth || 0;
+        const markdownContainer = markdownContainerRef.current;
+        const chatContainer = chatContainerRef.current;
+        
+        if (containerWidth && markdownContainer && chatContainer && mainContainerRef.current) {
+          // Calculate the new width based on mouse position
+          const mainRect = mainContainerRef.current.getBoundingClientRect();
+          const fromRight = mainRect.right - e.clientX;
+          const newWidthPercent = (fromRight / containerWidth) * 100;
+          
+          // Apply constraints (20% to 70%)
+          const limitedWidth = Math.max(20, Math.min(70, newWidthPercent));
+          setMarkdownWidth(limitedWidth);
+        }
+      }
+    };
+    
+    const onMouseUp = () => {
+      setIsResizingSidebar(false);
+      setIsResizingMarkdown(false);
+      document.documentElement.style.cursor = '';
+    };
+    
+    if (isResizingSidebar || isResizingMarkdown) {
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isResizingSidebar, isResizingMarkdown, isMarkdownCanvasOpen]);
 
   // Memoize generateNewThreadId to avoid dependency issues
   const generateNewThreadId = useCallback(() => {
@@ -133,39 +269,61 @@ const App: React.FC = () => {
     if (isMarkdownCanvasOpen && editingMessageId === messageId) {
       setIsMarkdownCanvasOpen(false);
       setEditingMessageId(null);
-      setLongestCodeBlockPosition(null);
+      setCodeBlockPosition(null);
     } else {
-      // Extract the code block from the message
-      const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
-
-      if (longestBlock && blockPosition) {
-        // Close any existing canvas first to reset states
-        if (isMarkdownCanvasOpen) {
-          setIsMarkdownCanvasOpen(false);
-          setEditingMessageId(null);
+      // First try to find any in-progress code block
+      const { codeBlock: inProgressBlock, blockPosition: inProgressPosition } = detectInProgressCodeBlock(content, 0);
+      
+      if (inProgressBlock && inProgressPosition) {
+        openMarkdownCanvas(messageId, inProgressBlock, inProgressPosition);
+      } else {
+        // Fall back to completed code block
+        const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
+        if (longestBlock && blockPosition) {
+          openMarkdownCanvas(messageId, longestBlock, blockPosition);
         }
-
-        // Short delay to ensure smooth transition between different messages' code blocks
-        setTimeout(() => {
-          setMarkdownContent(longestBlock);
-          setEditingMessageId(messageId);
-          setLongestCodeBlockPosition(blockPosition);
-          setIsMarkdownCanvasOpen(true);
-        }, 50);
       }
     }
+  };
+  
+  // Helper function to open the markdown canvas
+  const openMarkdownCanvas = (messageId: string, content: string, position: { start: number; end: number }) => {
+    // Close any existing canvas first to reset states
+    if (isMarkdownCanvasOpen) {
+      setIsMarkdownCanvasOpen(false);
+      setEditingMessageId(null);
+    }
+    
+    // Short delay to ensure smooth transition between different messages' code blocks
+    setTimeout(() => {
+      setMarkdownContent(content);
+      setEditingMessageId(messageId);
+      setCodeBlockPosition(position);
+      setIsMarkdownCanvasOpen(true);
+    }, 50);
   };
 
   // Check if a message contains a code block and show the BlockNote editor
   const handleMarkdownDetected = (content: string, messageId: string) => {
     if (content.includes("```")) {
-      const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
-
-      if (longestBlock && blockPosition) {
-        setMarkdownContent(longestBlock);
+      // First check for in-progress code blocks
+      const { codeBlock, blockPosition } = detectInProgressCodeBlock(content, 5);
+      
+      if (codeBlock && blockPosition) {
+        // Use the in-progress code block
+        setMarkdownContent(codeBlock);
         setEditingMessageId(messageId);
-        setLongestCodeBlockPosition(blockPosition);
+        setCodeBlockPosition(blockPosition);
         setIsMarkdownCanvasOpen(true);
+      } else {
+        // Fall back to completed code blocks
+        const { longestBlock, blockPosition: completedPosition } = extractLongestCodeBlock(content);
+        if (longestBlock && completedPosition) {
+          setMarkdownContent(longestBlock);
+          setEditingMessageId(messageId);
+          setCodeBlockPosition(completedPosition);
+          setIsMarkdownCanvasOpen(true);
+        }
       }
     }
   };
@@ -178,12 +336,12 @@ const App: React.FC = () => {
         (m) => m.id === editingMessageId,
       );
 
-      if (messageIndex !== -1 && longestCodeBlockPosition) {
+      if (messageIndex !== -1 && codeBlockPosition) {
         const originalContent = updatedMessages[messageIndex].content;
         const newContent =
-          originalContent.substring(0, longestCodeBlockPosition.start) +
+          originalContent.substring(0, codeBlockPosition.start) +
           editedContent +
-          originalContent.substring(longestCodeBlockPosition.end);
+          originalContent.substring(codeBlockPosition.end);
 
         updatedMessages[messageIndex] = {
           ...updatedMessages[messageIndex],
@@ -201,12 +359,20 @@ const App: React.FC = () => {
   const handleCloseMarkdownCanvas = () => {
     setIsMarkdownCanvasOpen(false);
     setEditingMessageId(null);
-    setLongestCodeBlockPosition(null);
+    setCodeBlockPosition(null);
   };
 
   return (
-    <div className='app'>
-      <div className='sidebar'>
+    <div 
+      className='app' 
+      ref={appContainerRef}
+    >
+      {/* Sidebar with resizer */}
+      <div 
+        className='sidebar' 
+        ref={sidebarRef}
+        style={{ width: `${sidebarWidth}px` }}
+      >
         <div className='thread-controls'>
           <button className='new-thread-btn' onClick={startNewThread}>
             New Conversation
@@ -214,53 +380,84 @@ const App: React.FC = () => {
           <div className='thread-id'>Thread ID: {threadId}</div>
         </div>
         <ModelSettings settings={settings} onSettingsChange={setSettings} />
-      </div>
-
-      <div className='main-content'>
-        <ChatBox
-          messages={messages}
-          settings={settings}
-          onSendMessage={handleSendMessage}
-          onMarkdownDetected={handleMarkdownDetected}
-          isLoading={isLoading}
-          streamingMessageId={streamingMessageId}
-          editingMessageId={editingMessageId}
-          longestCodeBlockPosition={longestCodeBlockPosition}
-          toggleMarkdownCanvas={toggleMarkdownCanvas}
+        <div 
+          className="sidebar-resizer" 
+          ref={sidebarResizerRef}
         />
-
-        {isLoading && (
-          <div className='loading-indicator'>
-            <p>AI is thinking...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className='error-message'>
-            <p>{error}</p>
-            <button
-              onClick={() => setError(null)}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "white",
-                marginLeft: "10px",
-                cursor: "pointer",
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Use the updated BlockNote-based MarkdownCanvas component */}
-      <MarkdownCanvas
-        content={markdownContent}
-        isOpen={isMarkdownCanvasOpen}
-        onClose={handleCloseMarkdownCanvas}
-        onSave={handleSaveMarkdown}
-      />
+      {/* Main container with chat and markdown */}
+      <div 
+        ref={mainContainerRef}
+        className='main-container'
+      >
+        {/* Chat container */}
+        <div 
+          ref={chatContainerRef}
+          className='chat-container'
+          style={{ 
+            width: isMarkdownCanvasOpen ? `${100 - markdownWidth}%` : '100%',
+          }}
+        >
+          <ChatBox
+            messages={messages}
+            settings={settings}
+            onSendMessage={handleSendMessage}
+            onMarkdownDetected={handleMarkdownDetected}
+            isLoading={isLoading}
+            streamingMessageId={streamingMessageId}
+            editingMessageId={editingMessageId}
+            longestCodeBlockPosition={codeBlockPosition}
+            toggleMarkdownCanvas={toggleMarkdownCanvas}
+          />
+
+          {isLoading && (
+            <div className='loading-indicator'>
+              <p>AI is thinking...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className='error-message'>
+              <p>{error}</p>
+              <button
+                onClick={() => setError(null)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "white",
+                  marginLeft: "10px",
+                  cursor: "pointer",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
+        
+        {/* Markdown editor with resizer */}
+        {isMarkdownCanvasOpen && (
+          <>
+            <div 
+              ref={markdownResizerRef} 
+              className='resizer'
+            />
+            <div 
+              ref={markdownContainerRef}
+              className='markdown-container' 
+              style={{ width: `${markdownWidth}%` }}
+            >
+              <MarkdownCanvas
+                content={markdownContent}
+                isOpen={isMarkdownCanvasOpen}
+                onClose={handleCloseMarkdownCanvas}
+                onSave={handleSaveMarkdown}
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

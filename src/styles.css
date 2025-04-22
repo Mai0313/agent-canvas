@@ -7,6 +7,9 @@
   --border-color: #dee2e6;
   --text-color: #212529;
   --secondary-text: #6c757d;
+  --resizer-size: 6px;
+  --resizer-color: #e9ecef;
+  --resizer-hover-color: #2c7be5;
 }
 
 * {
@@ -26,16 +29,35 @@ body {
   display: flex;
   height: 100vh;
   position: relative;
+  overflow: hidden;
 }
 
 /* Update the sidebar styling */
 .sidebar {
+  min-width: 200px;
   width: 250px;
+  max-width: 350px;
   background-color: var(--sidebar-color);
   border-right: 1px solid var(--border-color);
   padding: 15px;
   overflow-y: auto;
   z-index: 100;
+  position: relative;
+}
+
+.sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: var(--resizer-size);
+  height: 100%;
+  background-color: transparent;
+  cursor: col-resize;
+  z-index: 150;
+}
+
+.sidebar-resizer:hover {
+  background-color: var(--resizer-hover-color);
 }
 
 .model-settings {
@@ -46,6 +68,28 @@ body {
   margin-bottom: 15px;
   font-size: 18px;
   color: var(--text-color);
+}
+
+.main-container {
+  flex: 1;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.chat-container {
+  position: relative;
+  height: 100%;
+  flex: 1;
+  min-width: 350px;
+}
+
+.markdown-container {
+  height: 100%;
+  min-width: 300px;
+  overflow: hidden;
+  position: relative;
 }
 
 .main-content {
@@ -207,18 +251,13 @@ body {
 
 /* Updated markdown canvas styles for BlockNote */
 .markdown-canvas {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 40%;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background-color: #282c34;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
   display: flex;
   flex-direction: column;
   color: #f8f9fa;
-  overflow: hidden; /* Prevent outer scrolling */
+  overflow: hidden;
 }
 
 .markdown-header {
@@ -248,10 +287,9 @@ body {
 .markdown-content {
   flex: 1;
   padding: 0;
-  overflow: hidden; /* Remove overflow from the content container */
+  overflow: hidden;
 }
 
-/* BlockNote editor styles */
 .markdown-content .bn-container {
   height: 100%;
   border: none;
@@ -314,6 +352,33 @@ body {
 
 .code-block-link.active:hover {
   background-color: #236bce;
+}
+
+/* Resizer styles */
+.resizer {
+  width: var(--resizer-size);
+  height: 100%;
+  background-color: var(--resizer-color);
+  cursor: col-resize;
+  transition: background-color 0.2s;
+  z-index: 200;
+}
+
+.resizer:hover, .resizer.active {
+  background-color: var(--resizer-hover-color);
+}
+
+.horizontal-resizer {
+  height: var(--resizer-size);
+  width: 100%;
+  background-color: var(--resizer-color);
+  cursor: row-resize;
+  transition: background-color 0.2s;
+  z-index: 200;
+}
+
+.horizontal-resizer:hover, .horizontal-resizer.active {
+  background-color: var(--resizer-hover-color);
 }
 
 /* New thread controls styles */
