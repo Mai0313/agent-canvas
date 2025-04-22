@@ -364,7 +364,8 @@ body {
   z-index: 200;
 }
 
-.resizer:hover, .resizer.active {
+.resizer:hover,
+.resizer.active {
   background-color: var(--resizer-hover-color);
 }
 
@@ -377,7 +378,8 @@ body {
   z-index: 200;
 }
 
-.horizontal-resizer:hover, .horizontal-resizer.active {
+.horizontal-resizer:hover,
+.horizontal-resizer.active {
   background-color: var(--resizer-hover-color);
 }
 

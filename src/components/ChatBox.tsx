@@ -28,12 +28,53 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
+  const [prevMessagesLength, setPrevMessagesLength] = useState(0);
+
+  // 檢測用戶是否位於對話底部
+  const isNearBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
+
+    const threshold = 100; // 像素閾值
+    return (
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      threshold
+    );
+  };
+
+  // 監聽滾動事件，判斷是否應該自動滾動
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setShouldScrollToBottom(isNearBottom());
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    // 只有在以下情況才滾動到底部：
+    // 1. 用戶靠近底部
+    // 2. 有新消息到達
+    // 3. 正在流式傳輸消息
+    const hasNewMessages = messages.length > prevMessagesLength;
+    const isStreaming = !!streamingMessageId;
 
-    // Check if the latest assistant message contains markdown
+    if ((shouldScrollToBottom && hasNewMessages) || isStreaming) {
+      scrollToBottom();
+    }
+
+    setPrevMessagesLength(messages.length);
+
+    // 檢查最新的助手消息是否包含 markdown
     const lastAssistantMessage = [...messages]
       .reverse()
       .find((m) => m.role === "assistant");
@@ -44,7 +85,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     ) {
       onMarkdownDetected(lastAssistantMessage.content, lastAssistantMessage.id);
     }
-  }, [messages, onMarkdownDetected]);
+  }, [
+    messages,
+    onMarkdownDetected,
+    streamingMessageId,
+    prevMessagesLength,
+    shouldScrollToBottom,
+  ]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -56,13 +103,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     if (inputValue.trim()) {
       onSendMessage(inputValue.trim());
       setInputValue("");
+      // 用戶發送消息後設置為自動滾動到底部
+      setShouldScrollToBottom(true);
     }
   };
   console.log("Model:", settings.model);
 
   return (
     <div className='chat-box'>
-      <div className='messages-container'>
+      <div className='messages-container' ref={messagesContainerRef}>
         {messages.length === 0 ? (
           <div className='empty-state'>
             <h2>Start a conversation with {settings.model}</h2>
@@ -91,7 +140,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
       <form className='chat-input-form' onSubmit={handleSubmit}>
         <textarea
-          value={inputValue || "幫我寫 python snake game"} // For Development
+          value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder='Type your message...'
           rows={3}
