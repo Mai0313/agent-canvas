@@ -3,23 +3,17 @@ import { v4 as uuidv4 } from "uuid";
 import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
-import { Message, ModelSetting, APIType } from "./types";
+import { Message, ModelSetting } from "./types";
 import { ChatCompletion } from "./services/openai";
 import { extractLongestCodeBlock } from "./utils/markdownUtils";
+import { getDefaultModelSettings } from "./utils/modelUtils";
 import "./styles.css";
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [settings, setSettings] = useState<ModelSetting>({
-    api_type: (process.env.REACT_APP_API_TYPE as APIType) || "openai",
-    model: "gpt-4o",
-    baseUrl: process.env.REACT_APP_BASE_URL || "",
-    apiKey: process.env.REACT_APP_API_KEY || "",
-    temperature: parseFloat(process.env.REACT_APP_TEMPERATURE || "0.7"),
-    maxTokens: parseInt(process.env.REACT_APP_MAX_TOKENS || "2048", 10),
-    azureDeployment: process.env.REACT_APP_AZURE_DEPLOYMENT || "",
-    azureApiVersion: process.env.REACT_APP_AZURE_API_VERSION || "2025-03-01-preview",
-  });
+  const [settings, setSettings] = useState<ModelSetting>(
+    getDefaultModelSettings(),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string>(uuidv4());
@@ -41,7 +35,8 @@ const App: React.FC = () => {
   // Memoize generateNewThreadId to avoid dependency issues
   const generateNewThreadId = useCallback(() => {
     // Generate UUID and remove all hyphens, then take substring
-    const newThreadId = "thread_dvc_" + uuidv4().replace(/-/g, '').substring(0, 16);
+    const newThreadId =
+      "thread_dvc_" + uuidv4().replace(/-/g, "").substring(0, 16);
     setThreadId(newThreadId);
 
     // Update URL with the new thread ID without page reload
@@ -56,11 +51,20 @@ const App: React.FC = () => {
     if (isMarkdownCanvasOpen) {
       handleCloseMarkdownCanvas();
     }
-  }, [isMarkdownCanvasOpen]); // Add dependencies here
+  }, [isMarkdownCanvasOpen]);
 
-  // Generate a new thread ID and update URL on component mount
   useEffect(() => {
-    generateNewThreadId();
+    // Check if URL already has a thread ID
+    const url = new URL(window.location.href);
+    const existingThreadId = url.searchParams.get("thread_id");
+
+    if (existingThreadId) {
+      // Use the existing thread ID from URL
+      setThreadId(existingThreadId);
+    } else {
+      // Only generate new ID if we don't have one
+      generateNewThreadId();
+    }
   }, [generateNewThreadId]);
 
   // Add button/functionality to start a new thread

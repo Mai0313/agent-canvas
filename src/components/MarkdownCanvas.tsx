@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ChatCompletion } from "../services/openai";
-import { ModelSetting, Message, APIType } from "../types";
+import { Message } from "../types";
+import { getDefaultModelSettings } from "../utils/modelUtils";
 
 interface MarkdownCanvasProps {
   content: string;
@@ -165,17 +166,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     console.log("Generating title via Chat Completion API");
 
     try {
-      // Default settings for the API call
-      const settings: ModelSetting = {
-        api_type: (process.env.REACT_APP_API_TYPE as APIType) || "openai",
-        model: "gpt-4o-mini",
-        baseUrl: process.env.REACT_APP_BASE_URL || "",
-        apiKey: process.env.REACT_APP_API_KEY || "",
-        temperature: parseFloat(process.env.REACT_APP_TEMPERATURE || "0.7"),
-        maxTokens: parseInt(process.env.REACT_APP_MAX_TOKENS || "2048", 10),
-        azureDeployment: process.env.REACT_APP_AZURE_DEPLOYMENT || "",
-        azureApiVersion: process.env.REACT_APP_AZURE_API_VERSION || "2025-03-01-preview",
-      };
+      // Default settings for the API call with specific model for title generation
+      const settings = getDefaultModelSettings("gpt-4o-mini");
 
       const messages: Message[] = [
         {
