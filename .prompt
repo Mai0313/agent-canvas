@@ -10,3 +10,7 @@ LLM Chatbot Frontend UI
 ## Notes
 - 這個專案是使用 `React` 和 `TypeScript` 開發的
     - 你不需要編輯 `package.json` 你只需要提醒我安裝你需要的套件
+- 套件管理工具是 `yarn`
+
+## Your Task
+- 請你用其他markdown套件來取代現有的MarkdownCanvas來呈現 因為MarkdownCanvas的風格很醜
