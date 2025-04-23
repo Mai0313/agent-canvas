@@ -1,0 +1,5 @@
+這裡是我的Chatbot 前端UI
+當我請他寫代碼時 左邊會彈出一個markdown editor 也可以理解為 MarkdownCanvas
+
+而且當最一開始的代碼框出現時 他會開始計算行數 出現第五行時就會自動把整個代碼框輸出到MarkdownCanvas內
+MarkdownCanvas和ChatBox之間會有一個ResizeBox 用於給使用者調整每一區塊的大小
