@@ -1,5 +1,12 @@
-這裡是我的Chatbot 前端UI
-當我請他寫代碼時 左邊會彈出一個markdown editor 也可以理解為 MarkdownCanvas
+## Project Description
+LLM Chatbot Frontend UI
 
-而且當最一開始的代碼框出現時 他會開始計算行數 出現第五行時就會自動把整個代碼框輸出到MarkdownCanvas內
-MarkdownCanvas和ChatBox之間會有一個ResizeBox 用於給使用者調整每一區塊的大小
+## Project Structure and Plan
+- 當使用者請他寫代碼時
+    - 左邊會彈出一個 `markdown editor` a.k.a `MarkdownCanvas`
+- 當第一個 "\`\`\`" 出現時開始計算行數, 當出現第五行時就自動把整個代碼框透過 `Streaming` 的方式輸出到 `MarkdownCanvas` 內
+- MarkdownCanvas和ChatBox之間會有一個ResizeBox 用於給使用者調整每一區塊的大小
+
+## Notes
+- 這個專案是使用 `React` 和 `TypeScript` 開發的
+    - 你不需要編輯 `package.json` 你只需要提醒我安裝你需要的套件
