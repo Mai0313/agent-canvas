@@ -13,4 +13,16 @@ LLM Chatbot Frontend UI
 - 套件管理工具是 `yarn`
 
 ## Your Task
-- 請你用其他markdown套件來取代現有的MarkdownCanvas來呈現 因為MarkdownCanvas的風格很醜
+- 請幫我增加一個功能 在聊天框中新增一個可選的選項叫做 生成圖像 當生成圖像是被選取的狀態 要trigger兩件事情
+    - 將訊息透過下面這種方式來送出 以取得 base64 圖片
+        ```
+        client.images.generate({
+            prompt: "a cute cat",
+            n: 1,
+            model: "dall-e-3"
+            response_format: "b64_json"
+        })
+        ```
+    - 將訊息同時透過 ChatCompletion 讓他生成短的回覆
+- 當兩件事情都做完以後 請將該圖片渲染到ChatBox中 讓ChatBox顯示該圖片
+- 這兩件事情可以正合成一個 function 並寫在 `src/services/openai.ts` 內
