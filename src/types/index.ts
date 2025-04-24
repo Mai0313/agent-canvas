@@ -3,6 +3,8 @@ export interface Message {
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: Date;
+  imageUrl?: string; // Add support for images
+  isGeneratingImage?: boolean; // 添加標記，表示正在生成圖片
 }
 
 export type APIType = "openai" | "azure";

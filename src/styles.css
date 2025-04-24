@@ -10,6 +10,8 @@
   --resizer-size: 6px;
   --resizer-color: #e9ecef;
   --resizer-hover-color: #2c7be5;
+  --image-mode-color: #8a2be2;
+  --image-mode-bg: #f6f0ff;
 
   /* New markdown canvas variables */
   --canvas-bg-color: #1e1e1e;
@@ -208,9 +210,66 @@ body {
 
 .chat-input-form {
   display: flex;
+  flex-direction: column;
   padding: 15px;
   background-color: var(--sidebar-color);
   border-top: 1px solid var(--border-color);
+}
+
+/* Input controls for mode switching */
+.input-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.mode-button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background-color: white;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-button:hover {
+  background-color: #f0f7ff;
+}
+
+.mode-button.active {
+  background-color: var(--image-mode-bg);
+  color: var(--image-mode-color);
+  border-color: var(--image-mode-color);
+}
+
+.mode-indicator {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--image-mode-color);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.input-row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
 }
 
 .chat-input-form textarea {
@@ -590,4 +649,103 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.message-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Image in message styles */
+.message-image-container {
+  margin-top: 15px;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f5f5f5;
+  animation: fade-in 0.5s ease-in-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-image {
+  max-width: 100%;
+  border-radius: 6px;
+  display: block;
+}
+
+/* 圖像生成動畫相關樣式 */
+.generating-image-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.generating-image-animation {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 15px;
+}
+
+.brush-stroke {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--image-mode-color), #5d3fd3);
+  opacity: 0.7;
+  animation: paint 2s ease-in-out infinite;
+}
+
+.brush-stroke:nth-child(1) {
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: 0s;
+}
+
+.brush-stroke:nth-child(2) {
+  left: 20%;
+  top: 40%;
+  animation-delay: 0.5s;
+}
+
+.brush-stroke:nth-child(3) {
+  right: 20%;
+  top: 40%;
+  animation-delay: 1s;
+}
+
+@keyframes paint {
+  0% {
+    transform: scale(0.6) translateY(0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1) translateY(-15px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(0.6) translateY(0);
+    opacity: 0.6;
+  }
+}
+
+.generating-image-text {
+  font-size: 16px;
+  color: var(--image-mode-color);
+  font-weight: 500;
+  text-align: center;
+  animation: pulse 2s infinite;
 }

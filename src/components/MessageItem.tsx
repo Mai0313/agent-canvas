@@ -18,6 +18,20 @@ const MessageItem: React.FC<MessageItemProps> = ({
 }) => {
   // Function to render the message content with a "View Code" button if needed
   const processMessageContent = (): ReactNode[] => {
+    // 如果正在生成圖像，顯示動態加載效果
+    if (message.isGeneratingImage) {
+      return [
+        <div key="generating-image" className="generating-image-container">
+          <div className="generating-image-animation">
+            <div className="brush-stroke"></div>
+            <div className="brush-stroke"></div>
+            <div className="brush-stroke"></div>
+          </div>
+          <div className="generating-image-text">{message.content}</div>
+        </div>
+      ];
+    }
+
     // Check if there's a code block in the message
     const hasCodeBlock = message.content.includes("```");
 
@@ -82,15 +96,25 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </span>
         <span className='timestamp'>
           {message.timestamp.toLocaleTimeString()}
-          {isStreaming && (
+          {isStreaming && !message.isGeneratingImage && (
             <span className='streaming-indicator'> (typing...)</span>
           )}
         </span>
       </div>
       <div className='message-content'>
         {processMessageContent()}
-        {isStreaming && message.content === "" && (
+        {isStreaming && message.content === "" && !message.isGeneratingImage && (
           <div className='typing-indicator'>...</div>
+        )}
+        {message.imageUrl && (
+          <div className='message-image-container'>
+            <img 
+              src={message.imageUrl} 
+              // eslint-disable-next-line jsx-a11y/img-redundant-alt
+              alt="AI generated content" 
+              className='message-image'
+            />
+          </div>
         )}
       </div>
     </div>

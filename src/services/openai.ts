@@ -125,3 +125,65 @@ export const streamChatCompletion = async (
     throw error;
   }
 };
+
+/**
+ * Generate an image based on the prompt and also get a text response
+ * @param prompt The prompt for image generation and text response
+ * @param settings Model settings
+ * @param onToken Optional callback for streaming text response tokens
+ * @returns Object containing the image URL (base64) and text response
+ */
+export const generateImageAndText = async (
+  prompt: string,
+  settings: ModelSetting,
+  onToken?: (token: string) => void,
+): Promise<{ imageUrl: string; textResponse: string }> => {
+  try {
+    const client = createClient(settings);
+    console.log("Generating image and text for prompt:", prompt);
+
+    // Create system message for text response
+    const systemMessage = { 
+      role: "system", 
+      content: "Please provide a brief response to accompany the generated image." 
+    };
+
+    // Start both requests in parallel
+    const [imageResponse, textResponse] = await Promise.all([
+      // Image generation request
+      client.images.generate({
+        prompt,
+        n: 1,
+        model: "dall-e-3", // Using DALL-E 3 model
+        response_format: "b64_json",
+      }),
+
+      // Text response (using existing ChatCompletion function)
+      ChatCompletion(
+        [
+          { id: "system", role: "system", content: systemMessage.content, timestamp: new Date() },
+          { id: "user", role: "user", content: prompt, timestamp: new Date() },
+        ],
+        settings,
+        onToken
+      )
+    ]);
+
+    // Extract the base64 image data
+    const imageBase64 = imageResponse.data[0]?.b64_json;
+    if (!imageBase64) {
+      throw new Error("No image data received from the API");
+    }
+
+    // Create a data URL for the image
+    const imageUrl = `data:image/png;base64,${imageBase64}`;
+
+    return {
+      imageUrl,
+      textResponse: textResponse || "Image generated successfully.",
+    };
+  } catch (error) {
+    console.error("Error generating image and text:", error);
+    throw error;
+  }
+};
