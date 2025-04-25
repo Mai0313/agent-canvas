@@ -29,6 +29,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   toggleMarkdownCanvas,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const [quotedText, setQuotedText] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
@@ -104,14 +105,21 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     e.preventDefault();
 
     if (inputValue.trim()) {
+      // Build message content with quoted text if available
+      let messageContent = inputValue.trim();
+      if (quotedText) {
+        messageContent = `> ${quotedText}\n\n${messageContent}`;
+      }
+
       if (imageMode && onGenerateImage) {
         // Use the image generation function if in image mode
-        onGenerateImage(inputValue.trim());
+        onGenerateImage(messageContent);
       } else {
         // Regular text message
-        onSendMessage(inputValue.trim());
+        onSendMessage(messageContent);
       }
       setInputValue("");
+      setQuotedText(null);
       // 用戶發送消息後設置為自動滾動到底部
       setShouldScrollToBottom(true);
     }
@@ -119,6 +127,23 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const toggleImageMode = () => {
     setImageMode(!imageMode);
+  };
+
+  // Handle text selection for Ask GPT feature
+  const handleAskGpt = (selectedText: string) => {
+    setQuotedText(selectedText);
+    // Focus the input field after setting the quoted text
+    const textarea = document.querySelector(
+      ".chat-input-form textarea",
+    ) as HTMLTextAreaElement;
+    if (textarea) {
+      textarea.focus();
+    }
+  };
+
+  // Function to remove quoted text
+  const removeQuotedText = () => {
+    setQuotedText(null);
   };
 
   console.log("Model:", settings.model);
@@ -146,6 +171,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               toggleMarkdownCanvas={() =>
                 toggleMarkdownCanvas(message.id, message.content)
               }
+              onAskGpt={handleAskGpt}
             />
           ))
         )}
@@ -153,22 +179,45 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       </div>
 
       <form className='chat-input-form' onSubmit={handleSubmit}>
-        <div className="input-controls">
+        <div className='input-controls'>
           <button
-            type="button"
-            className={`mode-button ${imageMode ? 'active' : ''}`}
+            type='button'
+            className={`mode-button ${imageMode ? "active" : ""}`}
             onClick={toggleImageMode}
             disabled={isLoading}
           >
-            {imageMode ? '🖼️ Image Mode' : '💭 Chat Mode'}
+            {imageMode ? "🖼️ Image Mode" : "💭 Chat Mode"}
           </button>
         </div>
-        
-        <div className="input-row">
+
+        {quotedText && (
+          <div className='quoted-text-container'>
+            <div className='quoted-text'>
+              <div className='quote-marker'></div>
+              <div className='quote-content'>
+                {quotedText.length > 100
+                  ? quotedText.substring(0, 100) + "..."
+                  : quotedText}
+              </div>
+              <button
+                className='quote-remove-button'
+                onClick={removeQuotedText}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className='input-row'>
           <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
+            placeholder={
+              quotedText
+                ? "Ask about the selected text..."
+                : "Type your message..."
+            }
             rows={3}
             onKeyDown={(e) => {
               // Only handle Enter key when not in IME composition

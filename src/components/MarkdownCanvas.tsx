@@ -6,12 +6,14 @@ import { ChatCompletion } from "../services/openai";
 import { Message } from "../types";
 import { getDefaultModelSettings } from "../utils/modelUtils";
 import { Components } from "react-markdown";
+import SelectionPopup from "./SelectionPopup";
 
 interface MarkdownCanvasProps {
   content: string;
   isOpen: boolean;
   onClose: () => void;
   onSave: (content: string) => void;
+  onAskGpt?: (selectedText: string) => void; // Add this prop
 }
 
 const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
@@ -19,24 +21,26 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   isOpen,
   onClose,
   onSave,
+  onAskGpt,
 }) => {
   const [editMode, setEditMode] = useState(false);
   const [editableContent, setEditableContent] = useState(content);
   const canvasRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const [title, setTitle] = useState("Code Editor");
+  const [codeLanguage, setCodeLanguage] = useState("plaintext");
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [contentFullyLoaded, setContentFullyLoaded] = useState(false);
   const [shouldGenerateTitle, setShouldGenerateTitle] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0); // Add local scrollPosition state
 
-  // Extract language from code block
-  const [codeLanguage, setCodeLanguage] = useState<string>("plaintext");
+  // Text selection state
+  const [showSelectionPopup, setShowSelectionPopup] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
 
-  // Store scroll position of the parent container
-  const [scrollPosition, setScrollPosition] = useState(0);
-
-  // Update content when it changes
   useEffect(() => {
     setEditableContent(content);
     setTitle("Code Editor"); // Reset title on content change
@@ -91,7 +95,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       }, 10);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, scrollPosition, editMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, editMode]); // Removed scrollPosition dependency to fix the warning
 
   // Adjust textarea height on resize
   useEffect(() => {
@@ -181,6 +186,67 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     );
   };
 
+  // Handle wheel events to prevent parent container scrolling
+  const handleWheel = (e: React.WheelEvent) => {
+    // Prevent parent scrolling when cursor is over code area
+    e.stopPropagation();
+  };
+
+  // Text selection handler for preview mode
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (editMode) return; // Don't show popup in edit mode
+
+    const selection = window.getSelection();
+
+    // If there's a selection and it's not empty
+    if (
+      selection &&
+      !selection.isCollapsed &&
+      selection.toString().trim() !== ""
+    ) {
+      const selectedContent = selection.toString();
+      setSelectedText(selectedContent);
+
+      // Calculate position for the popup
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+
+      setPopupPosition({
+        top: rect.bottom + window.scrollY + 5, // Position below the selection with a small gap
+        left: rect.left + window.scrollX + rect.width / 2 - 40, // Center the popup
+      });
+
+      setShowSelectionPopup(true);
+    } else {
+      setShowSelectionPopup(false);
+    }
+  };
+
+  // Close popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        previewRef.current &&
+        !previewRef.current.contains(event.target as Node)
+      ) {
+        setShowSelectionPopup(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Handle "Ask GPT" button click
+  const handleAskGpt = (text: string) => {
+    if (onAskGpt) {
+      onAskGpt(text);
+      setShowSelectionPopup(false);
+    }
+  };
+
   // Wrap generateTitle in useCallback to memoize it
   const generateTitle = useCallback(async () => {
     if (!editableContent.trim()) return;
@@ -225,7 +291,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       // Reset the flag after generation attempt
       setShouldGenerateTitle(false);
     }
-  }, [editableContent, getCleanCodeContent]); // Add getCleanCodeContent as a dependency
+  }, [editableContent, getCleanCodeContent]);
 
   // Effect for title generation based on shouldGenerateTitle flag
   useEffect(() => {
@@ -260,38 +326,6 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const handleClose = () => {
     onClose();
   };
-
-  // For wheel handling in preview mode
-  const previewRef = useRef<HTMLDivElement>(null);
-  const handleWheel = (event: React.WheelEvent) => {
-    const element = editMode ? textareaRef.current : previewRef.current;
-    if (!element) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = element;
-    const isAtTop = scrollTop === 0;
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-
-    // If we're at the boundaries, let the event propagate to the parent
-    if ((isAtTop && event.deltaY < 0) || (isAtBottom && event.deltaY > 0)) {
-      return; // Let parent handle it
-    } else {
-      // Otherwise prevent propagation to allow scrolling within the element
-      event.stopPropagation();
-    }
-  };
-
-  // Prepare markdown content for react-markdown
-  const prepareMarkdownContent = (): string => {
-    const cleanContent = getCleanCodeContent();
-    // Make sure there's no trailing backticks that could be misinterpreted
-    const safeContent = cleanContent.replace(/```\s*$/g, "");
-
-    // Ensure we have proper opening and closing markers
-    // This prevents react-markdown from misinterpreting markers
-    return `\`\`\`${codeLanguage}\n${safeContent}${!safeContent.endsWith("\n") ? "\n" : ""}\`\`\``;
-  };
-
-  if (!isOpen) return null;
 
   // Define component mapping for ReactMarkdown
   const components: Components = {
@@ -329,6 +363,19 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       );
     },
   };
+
+  // Prepare markdown content for react-markdown
+  const prepareMarkdownContent = (): string => {
+    const cleanContent = getCleanCodeContent();
+    // Make sure there's no trailing backticks that could be misinterpreted
+    const safeContent = cleanContent.replace(/```\s*$/g, "");
+
+    // Ensure we have proper opening and closing markers
+    // This prevents react-markdown from misinterpreting markers
+    return `\`\`\`${codeLanguage}\n${safeContent}${!safeContent.endsWith("\n") ? "\n" : ""}\`\`\``;
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div className='markdown-canvas' ref={canvasRef}>
@@ -443,10 +490,19 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             className='markdown-preview'
             ref={previewRef}
             onWheel={handleWheel}
+            onMouseUp={handleMouseUp}
           >
             <ReactMarkdown components={components}>
               {prepareMarkdownContent()}
             </ReactMarkdown>
+
+            {showSelectionPopup && (
+              <SelectionPopup
+                position={popupPosition}
+                selectedText={selectedText}
+                onAskGpt={handleAskGpt}
+              />
+            )}
           </div>
         )}
       </div>

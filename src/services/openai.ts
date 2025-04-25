@@ -143,9 +143,10 @@ export const generateImageAndText = async (
     console.log("Generating image and text for prompt:", prompt);
 
     // Create system message for text response
-    const systemMessage = { 
-      role: "system", 
-      content: "Please provide a brief response to accompany the generated image." 
+    const systemMessage = {
+      role: "system",
+      content:
+        "Please provide a brief response to accompany the generated image.",
     };
 
     // Start both requests in parallel
@@ -161,12 +162,17 @@ export const generateImageAndText = async (
       // Text response (using existing ChatCompletion function)
       ChatCompletion(
         [
-          { id: "system", role: "system", content: systemMessage.content, timestamp: new Date() },
+          {
+            id: "system",
+            role: "system",
+            content: systemMessage.content,
+            timestamp: new Date(),
+          },
           { id: "user", role: "user", content: prompt, timestamp: new Date() },
         ],
         settings,
-        onToken
-      )
+        onToken,
+      ),
     ]);
 
     // Extract the base64 image data

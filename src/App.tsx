@@ -53,6 +53,25 @@ const App: React.FC = () => {
   const sidebarResizerRef = useRef<HTMLDivElement>(null);
   const markdownResizerRef = useRef<HTMLDivElement>(null);
 
+  // Handle text selection from both chat and markdown canvas
+  const handleAskGpt = (selectedText: string) => {
+    // Focus the chat input field and prepare it with the selected text
+    const chatInputElement = document.querySelector(
+      ".chat-input-form textarea",
+    ) as HTMLTextAreaElement;
+    if (chatInputElement) {
+      chatInputElement.focus();
+
+      // If there's a specific ChatBox method to handle quotes, we could call it here
+      // For now, just focus the text area so the user can type their question
+    }
+
+    // First, close markdown canvas if it's open
+    if (isMarkdownCanvasOpen) {
+      handleCloseMarkdownCanvas();
+    }
+  };
+
   // Monitor the currently streaming message for code blocks
   useEffect(() => {
     if (!streamingMessageId) return;
@@ -321,7 +340,7 @@ const App: React.FC = () => {
       const { imageUrl, textResponse } = await generateImageAndText(
         prompt,
         settings,
-        undefined // 使用 undefined 而不是 null，因為這是可選參數
+        undefined, // 使用 undefined 而不是 null，因為這是可選參數
       );
 
       // 生成完成後，更新消息，同時顯示文字和圖片
@@ -340,7 +359,6 @@ const App: React.FC = () => {
         }
         return updatedMessages;
       });
-
     } catch (err: any) {
       setError(
         err.message ||
@@ -541,6 +559,7 @@ const App: React.FC = () => {
                 isOpen={isMarkdownCanvasOpen}
                 onClose={handleCloseMarkdownCanvas}
                 onSave={handleSaveMarkdown}
+                onAskGpt={handleAskGpt}
               />
             </div>
           </>
