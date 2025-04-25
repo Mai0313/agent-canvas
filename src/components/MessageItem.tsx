@@ -104,17 +104,17 @@ const MessageItem: React.FC<MessageItemProps> = ({
             .map((line, i) => <div key={`before-${i}`}>{line || <br />}</div>),
         );
       }
-      // Add the code block placeholder with a button to toggle the canvas
-      elements.push(
-        <div className='code-block-placeholder' key='placeholder'>
-          <button
-            className='code-block-link active'
-            onClick={toggleMarkdownCanvas}
-          >
-            <span>Code is displayed in editor →</span>
-          </button>
-        </div>,
-      );
+      // // Add the code block placeholder with a button to toggle the canvas
+      // elements.push(
+      //   <div className='code-block-placeholder' key='placeholder'>
+      //     <button
+      //       className='code-block-link active'
+      //       onClick={toggleMarkdownCanvas}
+      //     >
+      //       <span>Code is displayed in editor →</span>
+      //     </button>
+      //   </div>,
+      // );
       // Add lines after the code block
       if (afterCode.trim()) {
         elements.push(
