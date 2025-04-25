@@ -10,9 +10,10 @@ LLM Chatbot Frontend UI
     - 會有一個 `ContextMenu` 彈出來
     - 當使用者點擊 `Ask GPT` 時會將選取的文字傳給 `ChatBox` 並且等待使用者輸入問題後送出
 - 當使用者點擊 `Generate Image` 時會透過 `generateImageAndText` 來產生圖片與對應的文字
-    - 當圖片生成完畢後會同時與文字渲染到 `ChatBox` 中
+    - 當圖片生成完畢後會同時與文字渲染到 `ChatBox`
 
 ## TODO Features
+- 將所有 `svg` 圖片改存到 `public` 資料夾內 避免明文使用
 - 請幫我增加一個功能 當使用者用滑鼠把某段字反白時 希望可以跳出一個選項在反白的字下面
     - `Ask GPT`
         - 當使用者點擊這個選項時 將反白的字當成引用放進 Chatbox 並且等待使用者輸入問題後送出
