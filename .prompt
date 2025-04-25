@@ -1,5 +1,7 @@
 ## Project Description
 LLM Chatbot Frontend UI
+- 這個專案是使用 `React` 和 `TypeScript` 開發 並透過 `yarn` 進行套件管理
+    - 你不需要編輯 `package.json` 你也不需要執行安裝套件的命令 你只需要提醒我安裝你需要的套件
 
 ## Supporting Features
 - 當使用者任務是寫代碼時
@@ -13,7 +15,18 @@ LLM Chatbot Frontend UI
     - 當圖片生成完畢後會同時與文字渲染到 `ChatBox`
 
 ## TODO Features
-- 將所有 `svg` 圖片改存到 `public` 資料夾內 避免明文使用
+- 請幫我把 `MarkdownCanvas` 改成 `BlockNote` 這個套件 那個套件的樣式比較好看
+- 請幫我將每一段 LLM 的回應下方新增幾個按鈕
+    - `Copy`
+        - 當使用者點擊這個按鈕時 會將該段回應的內容複製到剪貼簿
+    - `Edit`
+        - 當使用者點擊這個按鈕時 會將該段回應變成可編輯狀態 並且有額外一個 Send 按鈕 讓使用者修改以後點選送出
+        - 當使用者編輯完畢後 點擊 `Send` 按鈕會將編輯後的內容送出
+    - `Delete`
+        - 當使用者點擊這個按鈕時 會將該段回應刪除
+    - `Regenerate`
+        - 當使用者點擊這個按鈕時 會將該段對話刪除 並重新生成一次對話
+        - 當使用者編輯完畢後 點擊 `Send` 按鈕會將編輯後的內容送出
 - 請幫我增加一個功能 當使用者用滑鼠把某段字反白時 希望可以跳出一個選項在反白的字下面
     - `Ask GPT`
         - 當使用者點擊這個選項時 將反白的字當成引用放進 Chatbox 並且等待使用者輸入問題後送出
@@ -35,8 +48,3 @@ LLM Chatbot Frontend UI
     - 將訊息同時透過 ChatCompletion 讓他生成短的回覆
 - 當兩件事情都做完以後 請將該圖片渲染到ChatBox中 讓ChatBox顯示該圖片
 - 這兩件事情可以正合成一個 function 並寫在 `src/services/openai.ts` 內
-
-## Notes
-- 這個專案是使用 `React` 和 `TypeScript` 開發的
-    - 你不需要編輯 `package.json` 你只需要提醒我安裝你需要的套件
-- 套件管理工具是 `yarn`
