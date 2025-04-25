@@ -7,6 +7,10 @@ import { Message } from "../types";
 import { getDefaultModelSettings } from "../utils/modelUtils";
 import { Components } from "react-markdown";
 import SelectionPopup from "./SelectionPopup";
+// 導入圖標
+import closeIcon from "../assets/icon/close-icon.svg";
+import copyCodeIcon from "../assets/icon/copy-code.svg";
+import editCodeIcon from "../assets/icon/edit-code.svg";
 
 interface MarkdownCanvasProps {
   content: string;
@@ -386,20 +390,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             title='Close editor'
             className='close-button'
           >
-            <svg
-              width='24'
-              height='24'
-              viewBox='0 0 24 24'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-            >
-              <path
-                fillRule='evenodd'
-                clipRule='evenodd'
-                d='M5.63603 5.63604C6.02656 5.24552 6.65972 5.24552 7.05025 5.63604L12 10.5858L16.9497 5.63604C17.3403 5.24552 17.9734 5.24552 18.364 5.63604C18.7545 6.02657 18.7545 6.65973 18.364 7.05025L13.4142 12L18.364 16.9497C18.7545 17.3403 18.7545 17.9734 18.364 18.364C17.9734 18.7545 17.3403 18.7545 16.9497 18.364L12 13.4142L7.05025 18.364C6.65972 18.7545 6.02656 18.7545 5.63603 18.364C5.24551 17.9734 5.24551 17.3403 5.63603 16.9497L10.5858 12L5.63603 7.05025C5.24551 6.65973 5.24551 6.02657 5.63603 5.63604Z'
-                fill='currentColor'
-              ></path>
-            </svg>
+            <img src={closeIcon} alt="Close" width="24" height="24" />
           </button>
           <h3>{title}</h3>
           <div className='language-badge'>
@@ -419,20 +410,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             className={`icon-button ${copySuccess ? "success" : ""}`}
             title={copySuccess ? "Copied!" : "Copy code"}
           >
-            <svg
-              width='24'
-              height='24'
-              viewBox='0 0 24 24'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-            >
-              <path
-                fillRule='evenodd'
-                clipRule='evenodd'
-                d='M7 5C7 3.34315 8.34315 2 10 2H19C20.6569 2 22 3.34315 22 5V14C22 15.6569 20.6569 17 19 17H17V19C17 20.6569 15.6569 22 14 22H5C3.34315 22 2 20.6569 2 19V10C2 8.34315 3.34315 7 5 7H7V5ZM9 7H14C15.6569 7 17 8.34315 17 10V15H19C19.5523 15 20 14.5523 20 14V5C20 4.44772 19.5523 4 19 4H10C9.44772 4 9 4.44772 9 5V7ZM5 9C4.44772 9 4 9.44772 4 10V19C4 19.5523 4.44772 20 5 20H14C14.5523 20 15 19.5523 15 19V10C15 9.44772 14.5523 9 14 9H5Z'
-                fill='currentColor'
-              ></path>
-            </svg>
+            <img src={copyCodeIcon} alt="Copy" width="24" height="24" />
           </button>
           {!editMode ? (
             <button
@@ -440,28 +418,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
               className='icon-button'
               title='Edit code'
             >
-              <svg
-                width='24'
-                height='24'
-                viewBox='0 0 24 24'
-                fill='none'
-                xmlns='http://www.w3.org/2000/svg'
-              >
-                <path
-                  d='M5.66282 16.5231L5.18413 19.3952C5.12203 19.7678 5.09098 19.9541 5.14876 20.0888C5.19933 20.2067 5.29328 20.3007 5.41118 20.3512C5.54589 20.409 5.73218 20.378 6.10476 20.3159L8.97693 19.8372C9.72813 19.712 10.1037 19.6494 10.4542 19.521C10.7652 19.407 11.0608 19.2549 11.3343 19.068C11.6425 18.8575 11.9118 18.5882 12.4503 18.0497L20 10.5C21.3807 9.11929 21.3807 6.88071 20 5.5C18.6193 4.11929 16.3807 4.11929 15 5.5L7.45026 13.0497C6.91175 13.5882 6.6425 13.8575 6.43197 14.1657C6.24513 14.4392 6.09299 14.7348 5.97903 15.0458C5.85062 15.3963 5.78802 15.7719 5.66282 16.5231Z'
-                  stroke='currentColor'
-                  strokeWidth='2'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                ></path>
-                <path
-                  d='M14.5 7L18.5 11'
-                  stroke='currentColor'
-                  strokeWidth='2'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                ></path>
-              </svg>
+              <img src={editCodeIcon} alt="Edit" width="24" height="24" />
             </button>
           ) : (
             <>

@@ -10,8 +10,6 @@ for conversations with AI models. It features real-time streaming responses,
 markdown support, and a specialized code/markdown editor canvas that enhances
 the experience of working with code snippets and structured content.
 
-![Agent Canvas](assets/image.png)
-
 ## Features
 
 - **Interactive Chat Interface**: Clean, responsive design with user and AI
