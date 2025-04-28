@@ -27,7 +27,9 @@ LLM Chatbot Frontend UI
 - 使用者可以透過電腦的ctrl + v 來貼上圖片 貼上以後要送進chat completion
 
 ## TODO Features
-- 幫我把 generateImageAndText 這個功能的流程改寫一下 正確的流程應該是 先透過 image generation 來產生圖片 圖片產生以後將 image_url 放進 chatCompletion 來生成對應的圖片敘述 回答的效果會比較好
+- 幫我把 generateImageAndText 這個功能的流程改寫一下 
+    - 正確的流程應該是 先透過 image generation 來產生圖片 圖片產生以後將 image_url 放進 chatCompletion 來生成對應的圖片敘述
+    - chatCompletion 可以支援訊息中帶圖片的功能
 - 請幫我增加一個功能 當使用者用滑鼠把某段字反白時 希望可以跳出一個選項在反白的字下面
     - `Ask GPT`
         - 當使用者點擊這個選項時 將反白的字當成引用放進 Chatbox 並且等待使用者輸入問題後送出
