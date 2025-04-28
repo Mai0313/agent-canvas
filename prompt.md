@@ -18,6 +18,14 @@ LLM Chatbot Frontend UI
   - 當使用者點擊 `Ask GPT` 時會將選取的文字傳給 `ChatBox` 並且等待使用者輸入問題後送出
 - 當收到使用者訊息後 會透過 `chatCompletion` 來判斷任務內容
   - `canvas`
+    - `canvas` 模式下 原本 `chat` 會被拆成兩個 `chatCompletion` 但 輸出的結果會跟 `chat` 模式一樣
+    - 當 `taskType === "canvas"` 的時候 會觸發兩個chat completion
+      - 第一個 `chatCompletion`
+        會先將user的問題放進去 並讓LLM只能透過一個代碼框來回答問題 並且 將這段用 `streaming`
+        的方式寫入 `MarkdownCanvas`
+      - 當上述完成以後 將問題與生成完畢的代碼框一起放進第二個 `chatCompletion` 來生成後續的描述
+      - 這兩個 `chatCompletion` 將會同時進行並且輸出在同一個 `ChatBox` 內 保持與 `chat`
+        模式相同的行為
   - `image`
     - 生圖模式會透過 `generateImageAndText` 來產生圖片與對應的文字
     - 當圖片生成完畢後會同時與文字渲染到 `ChatBox`
@@ -41,8 +49,8 @@ LLM Chatbot Frontend UI
 
 ## TODO Features
 
-- 決定完任務內容後 `canvas` 的功能尚未完成 目前是收到以後 他的行為會跟 `chat` 相同 會由一個
-  `chatCompletion` 來處理整段問題
+- 決定完任務內容後 `canvas` 的功能尚未完成
+  - 目前已經可以順利生成代碼後再生成解釋 並且將生成出來的代碼框放進 `MarkdownCanvas` 內
 
   - 我想在 `canvas` 模式下 將這個動作拆成兩個 `chatCompletion` 但 輸出的結果會跟 `chat` 模式一樣
   - 當 `taskType === "canvas"` 的時候 會觸發兩個chat completion

@@ -402,7 +402,6 @@ const App: React.FC = () => {
       content,
       timestamp: new Date(),
     };
-
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
     setError(null);
@@ -434,7 +433,6 @@ const App: React.FC = () => {
         timestamp: new Date(),
         isGeneratingImage: taskType === "image", // Mark as generating image if detected as image task
       };
-
       setMessages((prev) => [...prev, assistantMessage]);
       setStreamingMessageId(assistantMessageId);
 
@@ -457,20 +455,110 @@ const App: React.FC = () => {
           return updatedMessages;
         });
       } else if (taskType === "canvas") {
-        // Handle canvas task (e.g., code generation)
-        await chatCompletion([...messages, userMessage], settings, (token) => {
+        // Enhanced canvas mode with two-step generation
+
+        // Step 1: Generate code block only - this will go directly to MarkdownCanvas
+        let codeBlock = "";
+        const codeSystemMessage: Message = {
+          id: "system-code-msg",
+          role: "system",
+          content:
+            "You are a coding assistant. Provide only a single code block solution with language formatting (e.g., ```javascript). Start directly with the code block and do not include any explanations or comments outside the code block. Make the solution concise and complete. Make sure all descriptions are in user language.",
+          timestamp: new Date(),
+        };
+
+        // 第一步：生成代码，并在生成过程中累积结果
+        await chatCompletion([codeSystemMessage, userMessage], settings, (token) => {
+          codeBlock += token;
+
+          // 实时更新消息内容
           setMessages((prev) => {
             const updatedMessages = [...prev];
             const messageIndex = updatedMessages.findIndex((m) => m.id === assistantMessageId);
             if (messageIndex !== -1) {
               updatedMessages[messageIndex] = {
                 ...updatedMessages[messageIndex],
-                content: updatedMessages[messageIndex].content + token,
+                content: token, // 仅显示当前 token，这个将在下面被 ChatBox 捕获但不显示
               };
             }
             return updatedMessages;
           });
         });
+
+        // 代码生成完毕后，创建一个新消息专门用于显示代码
+        const codeMessageId = uuidv4();
+        const codeOnlyMessage: Message = {
+          id: codeMessageId,
+          role: "assistant",
+          content: codeBlock,
+          timestamp: new Date(),
+        };
+
+        // 手动触发 MarkdownCanvas 的显示
+        // 重要：将代码内容显示在 MarkdownCanvas 中
+        setMarkdownContent(codeBlock);
+        setEditingMessageId(codeMessageId); // 使用新的消息 ID
+        setCodeBlockPosition({ start: 0, end: codeBlock.length });
+        setIsMarkdownCanvasOpen(true);
+
+        // Step 2: Generate explanation text (separate from code)
+        const explanationSystemMessage: Message = {
+          id: "system-explain-msg",
+          role: "system",
+          content:
+            "Now explain the code you provided in user language. Give context on how it works and any important implementation details. Don't repeat the code itself, just provide the explanation.",
+          timestamp: new Date(),
+        };
+
+        // Create a message that represents the generated code (for context)
+        const codeContextMessage: Message = {
+          id: "assistant-code-context",
+          role: "assistant",
+          content: codeBlock,
+          timestamp: new Date(),
+        };
+
+        // 第二步：生成解释文本
+        let explanation = "";
+
+        // 更新 ChatBox 中的消息内容为空，准备接收解释文本
+        setMessages((prev) => {
+          const updatedMessages = [...prev];
+          const messageIndex = updatedMessages.findIndex((m) => m.id === assistantMessageId);
+          if (messageIndex !== -1) {
+            updatedMessages[messageIndex] = {
+              ...updatedMessages[messageIndex],
+              content: "", // 清空内容，准备接收解释文本
+            };
+          }
+          return updatedMessages;
+        });
+
+        // 生成解释文本
+        await chatCompletion(
+          [explanationSystemMessage, userMessage, codeContextMessage],
+          settings,
+          (token) => {
+            explanation += token;
+
+            // 更新 ChatBox 中显示的解释文本
+            setMessages((prev) => {
+              const updatedMessages = [...prev];
+              const messageIndex = updatedMessages.findIndex((m) => m.id === assistantMessageId);
+              if (messageIndex !== -1) {
+                const currentContent = updatedMessages[messageIndex].content as string;
+                updatedMessages[messageIndex] = {
+                  ...updatedMessages[messageIndex],
+                  content: currentContent + token, // 只累积解释部分
+                };
+              }
+              return updatedMessages;
+            });
+          },
+        );
+
+        // 确保我们不会意外更新 MarkdownCanvas 的内容
+        setCodeBlockDetected(true);
       } else {
         // Handle normal chat or code tasks (code detection happens on response)
         await chatCompletion([...messages, userMessage], settings, (token) => {
