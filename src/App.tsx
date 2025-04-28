@@ -463,7 +463,7 @@ const App: React.FC = () => {
           id: "system-code-msg",
           role: "system",
           content:
-            "You are a coding assistant. Provide only a single code block solution with language formatting (e.g., ```javascript). Start directly with the code block and do not include any explanations or comments outside the code block. Make the solution concise and complete. Make sure all descriptions are in user language.",
+            "You are a canvas assistant. Provide only a single code block solution with language formatting (e.g., ```javascript). Start directly with the code block and do not include any explanations or comments outside the code block. Make the solution concise and complete. Make sure all descriptions are in user language.",
           timestamp: new Date(),
         };
 
@@ -503,7 +503,7 @@ const App: React.FC = () => {
           id: "system-explain-msg",
           role: "system",
           content:
-            "Now explain the code you provided in user language. Give context on how it works and any important implementation details. Don't repeat the code itself, just provide the explanation.",
+            "Now explain the code block you provided in user language. Give context on how it works and any important implementation details. Don't repeat the code itself, just provide the explanation. Make sure you use user language.",
           timestamp: new Date(),
         };
 
