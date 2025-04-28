@@ -158,12 +158,12 @@ export const chatCompletion = async (
  * Detect the task type from user message
  * @param message User message to analyze
  * @param settings Model settings
- * @returns Task type: "code", "image", or "chat"
+ * @returns Task type: "canvas", "image", or "chat"
  */
 export const detectTaskType = async (
   message: string,
   settings: ModelSetting,
-): Promise<"code" | "image" | "chat"> => {
+): Promise<"canvas" | "image" | "chat"> => {
   try {
     const client = createClient(settings);
 
@@ -171,7 +171,7 @@ export const detectTaskType = async (
     const systemMessage: ChatCompletionMessageParam = {
       role: "system",
       content:
-        "Analyze the user's message and determine if they are requesting: 1) code writing, 2) image generation, or 3) general chat. Respond with ONLY one of these exact words: 'code', 'image', or 'chat'.",
+        "Analyze the user's message and determine if they are requesting: 1) canvas writing, 2) image generation, or 3) general chat. Respond with ONLY one of these exact words: 'canvas', 'image', or 'chat'.",
     };
 
     // User message to analyze
@@ -192,7 +192,7 @@ export const detectTaskType = async (
     const taskType = response.choices[0].message.content?.trim().toLowerCase() || "chat";
 
     // Ensure we only return one of our expected types
-    if (taskType === "code") return "code";
+    if (taskType === "canvas") return "canvas";
     if (taskType === "image") return "image";
     return "chat"; // Default to chat for any other response
   } catch (error) {
