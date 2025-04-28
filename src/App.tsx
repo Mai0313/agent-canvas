@@ -4,7 +4,12 @@ import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
 import { Message, ModelSetting, MessageContent } from "./types";
-import { chatCompletion, generateImageAndText, fetchModels, detectTaskType } from "./services/openai";
+import {
+  chatCompletion,
+  generateImageAndText,
+  fetchModels,
+  detectTaskType,
+} from "./services/openai";
 import { extractLongestCodeBlock, detectInProgressCodeBlock } from "./utils/markdownUtils";
 import { getDefaultModelSettings } from "./utils/modelUtils";
 import "./styles.css";
@@ -453,6 +458,19 @@ const App: React.FC = () => {
         });
       } else if (taskType === "canvas") {
         // Handle canvas task (e.g., code generation)
+        await chatCompletion([...messages, userMessage], settings, (token) => {
+          setMessages((prev) => {
+            const updatedMessages = [...prev];
+            const messageIndex = updatedMessages.findIndex((m) => m.id === assistantMessageId);
+            if (messageIndex !== -1) {
+              updatedMessages[messageIndex] = {
+                ...updatedMessages[messageIndex],
+                content: updatedMessages[messageIndex].content + token,
+              };
+            }
+            return updatedMessages;
+          });
+        });
       } else {
         // Handle normal chat or code tasks (code detection happens on response)
         await chatCompletion([...messages, userMessage], settings, (token) => {
