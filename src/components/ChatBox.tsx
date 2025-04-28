@@ -16,6 +16,11 @@ interface ChatBoxProps {
   editingMessageId?: string | null;
   longestCodeBlockPosition?: { start: number; end: number } | null;
   toggleMarkdownCanvas: (messageId: string, content: string) => void;
+  // 新增的消息操作功能
+  onCopy?: (content: string) => void;
+  onEdit?: (messageId: string, newContent: string) => void;
+  onDelete?: (messageId: string) => void;
+  onRegenerate?: (messageId: string) => void;
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -29,6 +34,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   editingMessageId,
   longestCodeBlockPosition,
   toggleMarkdownCanvas,
+  // 新增的消息操作功能
+  onCopy,
+  onEdit,
+  onDelete,
+  onRegenerate,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [quotedText, setQuotedText] = useState<string | null>(null);
@@ -172,8 +182,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     setQuotedText(null);
   };
 
-  console.log("Model:", settings.model);
-
   return (
     <div className='chat-box'>
       <div className='messages-container' ref={messagesContainerRef}>
@@ -198,6 +206,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 toggleMarkdownCanvas(message.id, message.content)
               }
               onAskGpt={handleAskGpt}
+              // 傳遞新的消息操作功能
+              onCopy={onCopy}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onRegenerate={onRegenerate}
             />
           ))
         )}

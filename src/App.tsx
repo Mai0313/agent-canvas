@@ -75,6 +75,118 @@ const App: React.FC = () => {
     }
   };
 
+  // 處理消息複製
+  const handleCopyMessage = (content: string) => {
+    navigator.clipboard.writeText(content).catch((err) => {
+      console.error("無法複製內容：", err);
+      setError("無法複製到剪貼簿。");
+    });
+  };
+
+  // 處理消息編輯
+  const handleEditMessage = (messageId: string, newContent: string) => {
+    setMessages((prev) => {
+      const updatedMessages = [...prev];
+      const messageIndex = updatedMessages.findIndex((m) => m.id === messageId);
+      
+      if (messageIndex !== -1) {
+        updatedMessages[messageIndex] = {
+          ...updatedMessages[messageIndex],
+          content: newContent,
+        };
+      }
+      
+      return updatedMessages;
+    });
+  };
+
+  // 處理消息刪除
+  const handleDeleteMessage = (messageId: string) => {
+    setMessages((prev) => {
+      // 找到要刪除的消息的索引
+      const messageIndex = prev.findIndex((m) => m.id === messageId);
+      
+      if (messageIndex === -1) return prev;
+      
+      // 製作一個新的消息數組，移除該消息
+      const updatedMessages = [...prev];
+      updatedMessages.splice(messageIndex, 1);
+      
+      return updatedMessages;
+    });
+  };
+
+  // 處理消息重新生成
+  const handleRegenerateMessage = async (messageId: string) => {
+    // 找到當前消息及其索引
+    const messageIndex = messages.findIndex((m) => m.id === messageId);
+    if (messageIndex === -1) return;
+    
+    // 找到該助手消息之前的用戶消息
+    let userMessageIndex = messageIndex - 1;
+    while (userMessageIndex >= 0 && messages[userMessageIndex].role !== "user") {
+      userMessageIndex--;
+    }
+    
+    if (userMessageIndex < 0) {
+      setError("找不到用戶提問，無法重新生成回應。");
+      return;
+    }
+    
+    const userMessage = messages[userMessageIndex];
+    
+    // 刪除當前的助手消息
+    const updatedMessages = [...messages];
+    updatedMessages.splice(messageIndex, 1);
+    setMessages(updatedMessages);
+    
+    // 重新生成回應
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const assistantMessageId = uuidv4();
+      const assistantMessage: Message = {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, assistantMessage]);
+      setStreamingMessageId(assistantMessageId);
+      
+      // 收集上下文消息，直到並包括用戶消息
+      const contextMessages = messages.slice(0, userMessageIndex + 1);
+      
+      await ChatCompletion(contextMessages, settings, (token) => {
+        setMessages((prev) => {
+          const updatedMsgs = [...prev];
+          const msgIndex = updatedMsgs.findIndex((m) => m.id === assistantMessageId);
+          
+          if (msgIndex !== -1) {
+            updatedMsgs[msgIndex] = {
+              ...updatedMsgs[msgIndex],
+              content: updatedMsgs[msgIndex].content + token,
+            };
+          }
+          
+          return updatedMsgs;
+        });
+      });
+      
+    } catch (err: any) {
+      setError(
+        err.message ||
+          "重新生成回應時出錯。請檢查您的設置並重試。"
+      );
+      console.error("重新生成回應錯誤:", err);
+    } finally {
+      setIsLoading(false);
+      setStreamingMessageId(null);
+    }
+  };
+
   // Monitor the currently streaming message for code blocks
   useEffect(() => {
     if (!streamingMessageId) return;
@@ -521,6 +633,10 @@ const App: React.FC = () => {
             editingMessageId={editingMessageId}
             longestCodeBlockPosition={codeBlockPosition}
             toggleMarkdownCanvas={toggleMarkdownCanvas}
+            onCopy={handleCopyMessage}
+            onEdit={handleEditMessage}
+            onDelete={handleDeleteMessage}
+            onRegenerate={handleRegenerateMessage}
           />
 
           {isLoading && (

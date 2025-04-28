@@ -950,3 +950,94 @@ body {
 .bn-editor .ProseMirror {
   padding: 16px;
 }
+
+/* 新增樣式用於消息操作按鈕 */
+.message-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message:hover .message-actions {
+  opacity: 1;
+}
+
+.message-actions .action-button {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.message-actions .action-button:hover {
+  background-color: #e0e0e0;
+}
+
+.message-actions .action-button.copy-success {
+  background-color: #ecfdf5;
+  color: #0d9488;
+  border-color: #0d9488;
+}
+
+/* 編輯模式下的消息樣式 */
+.message.editing .message-content {
+  padding: 0;
+  margin: 0;
+}
+
+.edit-container {
+  width: 100%;
+}
+
+.edit-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  resize: vertical;
+  min-height: 100px;
+  background-color: white;
+}
+
+.edit-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.edit-save-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-save-button:hover {
+  background-color: #236bce;
+}
+
+.edit-cancel-button {
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-cancel-button:hover {
+  background-color: #f0f0f0;
+}
