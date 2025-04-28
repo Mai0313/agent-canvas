@@ -467,10 +467,23 @@ const App: React.FC = () => {
           timestamp: new Date(),
         };
 
+        // Create a separate code message ID for the MarkdownCanvas content
+        const codeMessageId = uuidv4();
+        
+        // Open the MarkdownCanvas immediately to prepare for streaming
+        setMarkdownContent("");
+        setEditingMessageId(codeMessageId);
+        setCodeBlockPosition({ start: 0, end: 0 });
+        setIsMarkdownCanvasOpen(true);
+
         // 第一步：生成代码，并在生成过程中累积结果
         await chatCompletion([codeSystemMessage, userMessage], settings, (token) => {
           codeBlock += token;
-
+          
+          // Update MarkdownCanvas content with each token received - true streaming
+          setMarkdownContent(codeBlock);
+          setCodeBlockPosition({ start: 0, end: codeBlock.length });
+          
           // 实时更新消息内容
           setMessages((prev) => {
             const updatedMessages = [...prev];
@@ -484,23 +497,6 @@ const App: React.FC = () => {
             return updatedMessages;
           });
         });
-
-        // 代码生成完毕后，创建一个新消息专门用于显示代码
-        const codeMessageId = uuidv4();
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const codeOnlyMessage: Message = {
-          id: codeMessageId,
-          role: "assistant",
-          content: codeBlock,
-          timestamp: new Date(),
-        };
-
-        // 手动触发 MarkdownCanvas 的显示
-        // 重要：将代码内容显示在 MarkdownCanvas 中
-        setMarkdownContent(codeBlock);
-        setEditingMessageId(codeMessageId); // 使用新的消息 ID
-        setCodeBlockPosition({ start: 0, end: codeBlock.length });
-        setIsMarkdownCanvasOpen(true);
 
         // Step 2: Generate explanation text (separate from code)
         const explanationSystemMessage: Message = {
@@ -536,13 +532,15 @@ const App: React.FC = () => {
           return updatedMessages;
         });
 
+        // 确保我们不会意外更新 MarkdownCanvas 的内容
+        setCodeBlockDetected(true);
+        
         // 生成解释文本
         await chatCompletion(
           [explanationSystemMessage, userMessage, codeContextMessage],
           settings,
           (token) => {
             explanation += token;
-
             // 更新 ChatBox 中显示的解释文本
             setMessages((prev) => {
               const updatedMessages = [...prev];
@@ -558,9 +556,6 @@ const App: React.FC = () => {
             });
           },
         );
-
-        // 确保我们不会意外更新 MarkdownCanvas 的内容
-        setCodeBlockDetected(true);
       } else {
         // Handle normal chat or code tasks (code detection happens on response)
         await chatCompletion([...messages, userMessage], settings, (token) => {
