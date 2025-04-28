@@ -29,6 +29,10 @@ LLM Chatbot Frontend UI
 - 使用者可以透過電腦的ctrl + v 來貼上圖片 貼上以後要送進chat completion
 
 ## TODO Features
+- 請幫我把目前版本稍微修改一下 我希望不要有 `Chat Mode` 和 `Image Mode` 我希望當使用者訊息進來以後 先透過一個 `chatCompletion` 來決定任務內容
+    - 當任務內容是 `寫代碼` 時 會自動進入 `MarkdownCanvas` 模式
+    - 當任務內容是 `生成圖片` 時 會自動進入 `Image Mode` 模式
+    - 當任務內容是 `聊天` 時 會自動進入 `Chat Mode` 模式
 - 請幫我增加一個功能 當使用者用滑鼠把某段字反白時 希望可以跳出一個選項在反白的字下面
     - `Ask GPT`
         - 當使用者點擊這個選項時 將反白的字當成引用放進 Chatbox 並且等待使用者輸入問題後送出
