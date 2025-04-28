@@ -99,6 +99,30 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     shouldScrollToBottom,
   ]);
 
+  // 新增：監聽自定義事件，從 MarkdownCanvas 獲取選中的文字
+  useEffect(() => {
+    const handleSetQuotedText = (event: Event) => {
+      const customEvent = event as CustomEvent<{ quotedText: string }>;
+      if (customEvent.detail && customEvent.detail.quotedText) {
+        setQuotedText(customEvent.detail.quotedText);
+      }
+    };
+
+    // 註冊全局事件監聽器
+    document.addEventListener(
+      "setQuotedText",
+      handleSetQuotedText as EventListener,
+    );
+
+    // 組件卸載時移除事件監聽器
+    return () => {
+      document.removeEventListener(
+        "setQuotedText",
+        handleSetQuotedText as EventListener,
+      );
+    };
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };

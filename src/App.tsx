@@ -55,18 +55,21 @@ const App: React.FC = () => {
 
   // Handle text selection from both chat and markdown canvas
   const handleAskGpt = (selectedText: string) => {
-    // Focus the chat input field and prepare it with the selected text
+    // 創建一個自定義事件來傳遞選中的文字
+    const event = new CustomEvent('setQuotedText', { 
+      detail: { quotedText: selectedText } 
+    });
+    document.dispatchEvent(event);
+    
+    // Focus the chat input field
     const chatInputElement = document.querySelector(
       ".chat-input-form textarea",
     ) as HTMLTextAreaElement;
     if (chatInputElement) {
       chatInputElement.focus();
-
-      // If there's a specific ChatBox method to handle quotes, we could call it here
-      // For now, just focus the text area so the user can type their question
     }
-
-    // First, close markdown canvas if it's open
+    
+    // Close markdown canvas if it's open
     if (isMarkdownCanvasOpen) {
       handleCloseMarkdownCanvas();
     }

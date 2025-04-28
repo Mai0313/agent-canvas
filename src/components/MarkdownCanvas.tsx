@@ -66,12 +66,34 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const [copySuccess, setCopySuccess] = useState(false);
   const [contentFullyLoaded, setContentFullyLoaded] = useState(false);
   const [shouldGenerateTitle, setShouldGenerateTitle] = useState(false);
+  const [hasClosingBackticks, setHasClosingBackticks] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
 
   // Text selection state
   const [showSelectionPopup, setShowSelectionPopup] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+
+  // 檢測是否存在結束標記（用於檢測完整代碼塊）
+  const hasEndingBackticks = useCallback((text: string): boolean => {
+    // 分析文本是否有結束的```
+    const lines = text.split("\n");
+    // 找到第一個```之後，再找是否有另一個```
+    let foundFirst = false;
+
+    for (const line of lines) {
+      if (!foundFirst && line.trim().startsWith("```")) {
+        foundFirst = true;
+        continue;
+      }
+
+      if (foundFirst && line.trim() === "```") {
+        return true;
+      }
+    }
+
+    return false;
+  }, []);
 
   // Toggle editor editability when edit mode changes
   useEffect(() => {
@@ -94,10 +116,15 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       setCodeLanguage("plaintext");
     }
 
+    // 檢查內容是否有結束的```標記
+    const hasClosing = hasEndingBackticks(content);
+    setHasClosingBackticks(hasClosing);
+
     // Clean the content by removing markdown code fence markers
     let cleanContent = content;
     cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
-    if (cleanContent.trim().endsWith("```")) {
+    // 檢查是否以```結束並去除
+    if (cleanContent.includes("\n```")) {
       cleanContent = cleanContent.replace(/\n```\s*$/m, "");
     }
 
@@ -119,7 +146,9 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
         }
 
         setContentFullyLoaded(true);
-        setShouldGenerateTitle(true);
+
+        // 當有結束標記時才生成標題
+        setShouldGenerateTitle(hasClosing);
       } catch (error) {
         console.error("Error parsing markdown to blocks:", error);
       } finally {
@@ -128,7 +157,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     };
 
     importMarkdown();
-  }, [content, editor, codeLanguage]);
+  }, [content, editor, codeLanguage, hasEndingBackticks]);
 
   // Reset copy success message after 2 seconds
   useEffect(() => {
@@ -146,10 +175,10 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     if (isOpen) {
       // Store the current scroll position
       setScrollPosition(window.scrollY || document.documentElement.scrollTop);
-      // Each time the editor opens, we should generate a new title
-      setShouldGenerateTitle(true);
+      // 只有當程式碼區塊完整時（有結束標記）才生成標題
+      setShouldGenerateTitle(hasClosingBackticks);
     }
-  }, [isOpen]);
+  }, [isOpen, hasClosingBackticks]);
 
   // Restore the scroll position when editor state changes
   useEffect(() => {
@@ -248,7 +277,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       // Remove markdown fence if present
       let cleanContent = markdown;
       cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
-      if (cleanContent.trim().endsWith("```")) {
+      if (cleanContent.includes("\n```")) {
         cleanContent = cleanContent.replace(/\n```\s*$/m, "");
       }
       return cleanContent;
@@ -284,7 +313,13 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 
     onSave(contentToSave);
     setEditMode(false);
-    setShouldGenerateTitle(true);
+
+    // 檢查儲存的內容是否有完整的代碼塊（開始和結束標記）
+    const hasEndingMarker = hasEndingBackticks(
+      `\`\`\`${codeLanguage}\n${contentToSave}\n\`\`\``
+    );
+    setShouldGenerateTitle(hasEndingMarker);
+    setHasClosingBackticks(hasEndingMarker);
   };
 
   // Cancel edit
@@ -311,9 +346,16 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 
   // Handle raw markdown changes in textarea
   const handleRawMarkdownChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLTextAreaElement>
   ) => {
-    setRawMarkdown(e.target.value);
+    const newContent = e.target.value;
+    setRawMarkdown(newContent);
+
+    // 檢查原始編輯模式中是否有完整的代碼塊
+    // 我們將原始文本包裝在代碼標記中進行檢查
+    const wrappedContent = `\`\`\`${codeLanguage}\n${newContent}\n\`\`\``;
+    const hasClosing = hasEndingBackticks(wrappedContent);
+    setHasClosingBackticks(hasClosing);
   };
 
   // Copy code to clipboard
@@ -326,7 +368,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       },
       () => {
         console.error("Failed to copy code");
-      },
+      }
     );
   };
 
@@ -345,7 +387,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       editor.blocksToMarkdownLossy(editor.document).then((markdown) => {
         let cleanContent = markdown;
         cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
-        if (cleanContent.trim().endsWith("```")) {
+        if (cleanContent.includes("\n```")) {
           cleanContent = cleanContent.replace(/\n```\s*$/m, "");
         }
         setRawMarkdown(cleanContent);
@@ -360,6 +402,10 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
           const markdownContent = `\`\`\`${codeLanguage}\n${rawMarkdown}\n\`\`\``;
           const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
           editor.replaceBlocks(editor.document, blocks);
+
+          // 檢查轉換後的內容是否有完整代碼塊
+          const hasClosing = hasEndingBackticks(markdownContent);
+          setHasClosingBackticks(hasClosing);
         } catch (error) {
           console.error("Error updating from raw markdown:", error);
         }
@@ -371,7 +417,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 
   // Generate title for the code snippet
   const generateTitle = useCallback(async () => {
-    if (loadingEditor) return;
+    // 只有當編輯器載入完成且代碼塊完整時才生成標題
+    if (loadingEditor || !hasClosingBackticks) return;
 
     const cleanContent = await getCleanCodeContent();
     if (!cleanContent.trim()) return;
@@ -415,7 +462,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       setIsGeneratingTitle(false);
       setShouldGenerateTitle(false);
     }
-  }, [getCleanCodeContent, loadingEditor]);
+  }, [getCleanCodeContent, loadingEditor, hasClosingBackticks]);
 
   // Effect for title generation based on shouldGenerateTitle flag
   useEffect(() => {
@@ -424,7 +471,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       contentFullyLoaded &&
       isOpen &&
       !isGeneratingTitle &&
-      !loadingEditor
+      !loadingEditor &&
+      hasClosingBackticks // 只有當有結束標記時才生成標題
     ) {
       const titleTimer = setTimeout(() => {
         generateTitle();
@@ -438,7 +486,18 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     isGeneratingTitle,
     generateTitle,
     loadingEditor,
+    hasClosingBackticks,
   ]);
+
+  // Manual title generation function
+  const handleManualGenerateTitle = () => {
+    if (hasClosingBackticks) {
+      setShouldGenerateTitle(true);
+    } else {
+      console.log("無法生成標題：代碼塊不完整（缺少結束標記```）");
+      // 可以選擇顯示通知給用戶，告知需要完整的代碼塊
+    }
+  };
 
   // Handle close button click
   const handleClose = () => {
@@ -448,85 +507,90 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className='markdown-canvas' ref={canvasRef}>
-      <div className='markdown-header'>
+    <div className="markdown-canvas" ref={canvasRef}>
+      <div className="markdown-header">
         <div style={{ display: "flex", alignItems: "center" }}>
           <button
             onClick={handleClose}
-            title='Close editor'
-            className='close-button'
+            title="Close editor"
+            className="close-button"
           >
-            <img src={closeIcon} alt='Close' width='24' height='24' />
+            <img src={closeIcon} alt="Close" width="24" height="24" />
           </button>
           <h3>{title}</h3>
-          <div className='language-badge'>
+          <div className="language-badge">
             {codeLanguage !== "plaintext" && codeLanguage}
           </div>
           <button
-            onClick={() => setShouldGenerateTitle(true)}
-            disabled={isGeneratingTitle}
-            className='title-button'
+            onClick={handleManualGenerateTitle}
+            disabled={isGeneratingTitle || !hasClosingBackticks}
+            className="title-button"
+            title={
+              !hasClosingBackticks
+                ? "需要完整的代碼塊（有結束標記```）才能生成標題"
+                : ""
+            }
           >
-            {isGeneratingTitle ? "Generating..." : "AI Title"}
+            {isGeneratingTitle ? "生成中..." : "AI 標題"}
           </button>
           <button
             onClick={toggleRawView}
-            className='title-button'
+            className="title-button"
             style={{ marginLeft: "8px" }}
           >
-            {isRawView ? "Editor View" : "Raw View"}
+            {isRawView ? "編輯器視圖" : "原始視圖"}
           </button>
         </div>
-        <div className='markdown-controls'>
+        <div className="markdown-controls">
           <button
             onClick={handleCopyCode}
             className={`icon-button ${copySuccess ? "success" : ""}`}
-            title={copySuccess ? "Copied!" : "Copy code"}
+            title={copySuccess ? "已複製！" : "複製代碼"}
           >
-            <img src={copyCodeIcon} alt='Copy' width='24' height='24' />
+            <img src={copyCodeIcon} alt="Copy" width="24" height="24" />
           </button>
           {!editMode ? (
             <button
               onClick={handleEdit}
-              className='icon-button'
-              title='Edit code'
+              className="icon-button"
+              title="編輯代碼"
             >
-              <img src={editCodeIcon} alt='Edit' width='24' height='24' />
+              <img src={editCodeIcon} alt="Edit" width="24" height="24" />
             </button>
           ) : (
             <>
-              <button onClick={handleSave} className='action-button'>
-                Save
+              <button onClick={handleSave} className="action-button">
+                保存
               </button>
-              <button onClick={handleCancel} className='action-button'>
-                Cancel
+              <button onClick={handleCancel} className="action-button">
+                取消
               </button>
             </>
           )}
         </div>
       </div>
 
-      <div className='markdown-content'>
+      <div className="markdown-content">
         {loadingEditor ? (
-          <div className='loading-editor'>Loading editor...</div>
+          <div className="loading-editor">載入編輯器中...</div>
         ) : isRawView ? (
           <textarea
             ref={rawEditorRef}
             value={rawMarkdown}
             onChange={handleRawMarkdownChange}
-            className='markdown-editor'
-            wrap='off'
+            className="markdown-editor"
+            wrap="off"
           />
         ) : (
           <div
-            className='blocknote-container'
+            className="blocknote-container"
             ref={previewRef}
             style={{ height: "100%" }}
           >
             {/* Using BlockNoteViewRaw with proper configuration */}
-            <BlockNoteViewRaw editor={editor} theme='dark' editable={editMode}>
+            <BlockNoteViewRaw editor={editor} theme="dark" editable={editMode}>
               <SuggestionMenuController
-                triggerCharacter='/'
+                triggerCharacter="/"
                 getItems={async () => getDefaultReactSlashMenuItems(editor)}
               />
             </BlockNoteViewRaw>
