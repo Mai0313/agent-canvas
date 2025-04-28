@@ -487,6 +487,7 @@ const App: React.FC = () => {
 
         // 代码生成完毕后，创建一个新消息专门用于显示代码
         const codeMessageId = uuidv4();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const codeOnlyMessage: Message = {
           id: codeMessageId,
           role: "assistant",
@@ -519,6 +520,7 @@ const App: React.FC = () => {
         };
 
         // 第二步：生成解释文本
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         let explanation = "";
 
         // 更新 ChatBox 中的消息内容为空，准备接收解释文本
