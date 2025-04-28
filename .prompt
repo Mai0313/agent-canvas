@@ -24,38 +24,9 @@ LLM Chatbot Frontend UI
     - `Regenerate`
         - 當使用者點擊這個按鈕時 會將該段對話刪除 並重新生成一次對話
         - 當使用者編輯完畢後 點擊 `Send` 按鈕會將編輯後的內容送出
+- 使用者可以透過電腦的ctrl + v 來貼上圖片 貼上以後要送進chat completion
 
 ## TODO Features
-- 幫我把代碼中的 chatCompletion 改成可以接收 image 並送進 chatCompletion
-    - 我希望使用者可以透過電腦的ctrl + v 來貼上圖片 貼上以後要送進chat completion
-    - 這裡是範例
-    ```
-    import fs from "fs";
-    import OpenAI from "openai";
-
-    const openai = new OpenAI();
-
-    const imagePath = "path_to_your_image.jpg";
-    const base64Image = fs.readFileSync(imagePath, "base64");
-
-    const completion = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
-        messages: [{
-            role: "user",
-            content: [
-                { type: "text", text: "what's in this image?" },
-                {
-                    type: "image_url",
-                    image_url: {
-                        url: `data:image/jpeg;base64,${base64Image}`,
-                    },
-                },
-            ],
-        }],
-    });
-
-    console.log(completion.choices[0].message.content);
-    ```
 - 請幫我增加一個功能 當使用者用滑鼠把某段字反白時 希望可以跳出一個選項在反白的字下面
     - `Ask GPT`
         - 當使用者點擊這個選項時 將反白的字當成引用放進 Chatbox 並且等待使用者輸入問題後送出
