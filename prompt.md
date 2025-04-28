@@ -50,8 +50,11 @@ LLM Chatbot Frontend UI
 ## TODO Features
 
 - 決定完任務內容後 `canvas` 的功能尚未完成
-  - 目前已經可以順利生成代碼後再生成解釋 並且將生成出來的代碼框放進 `MarkdownCanvas` 內
-  - 但目前還沒有辦法將代碼框的內容透過 `Streaming` 的方式輸出到 `MarkdownCanvas`
+
+  - 目前已經可以順利將使用者的問題分成兩段 `chatCompletion` 第一段生成的代碼渲染進 `MarkdownCanvas`
+    內 第二段生成的解釋正常顯示於 `ChatBox` 內
+  - 但目前第一段渲染進 `MarkdownCanvas` 的內容並沒有透過 `streaming`
+    的方式輸出 第二段卻可以正常透過 `streaming` 的方式輸出到 `ChatBox`
 
   - 我想在 `canvas` 模式下 將這個動作拆成兩個 `chatCompletion` 但 輸出的結果會跟 `chat` 模式一樣
   - 當 `taskType === "canvas"` 的時候 會觸發兩個chat completion
