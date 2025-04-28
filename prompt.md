@@ -49,6 +49,20 @@ LLM Chatbot Frontend UI
 
 ## TODO Features
 
+- 幫我把這段功能
+```
+          <button onClick={toggleRawView} className='title-button' style={{ marginLeft: "8px" }}>
+            {isRawView ? "編輯器視圖" : "原始視圖"}
+          </button>
+```
+這段功能有一個不錯的地方 就是當我點 原始視圖的時候 `MarkdownCanvas` 會變成可被編輯的狀態
+  - 但這個功能目前是獨立的 我希望可以將這個功能整合進去 `Edit` 和 `保存` 的按鈕裡面
+  - 當使用者點擊 `Edit` 按鈕時 `MarkdownCanvas` 會變成可被編輯的狀態 也就是 `原始視圖` 的狀態
+  - 當使用者點擊 `保存` 按鈕時 `MarkdownCanvas` 會變成不可被編輯的狀態 也就是 `編輯器視圖` 的狀態
+  - 當使用者有透過編輯 編輯過 `MarkdownCanvas` 的內容時
+    - 當使用者點擊 `保存` 按鈕時 會將編輯後的內容透過引用的方式 等待使用者填入問題 最後送進 `chatCompletion` 並且將編輯後的內容渲染到 `MarkdownCanvas` 內
+    - 當使用者點擊 `Cancel` 按鈕時 會將編輯後的內容丟棄 並且將編輯後的內容渲染到 `MarkdownCanvas` 內
+
 - 決定完任務內容後 `canvas` 的功能尚未完成
 
   - 目前已經可以順利將使用者的問題分成兩段 `chatCompletion` 第一段生成的代碼渲染進 `MarkdownCanvas`
