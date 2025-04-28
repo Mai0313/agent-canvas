@@ -122,10 +122,13 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 
     // Clean the content by removing markdown code fence markers
     let cleanContent = content;
-    cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
-    // 檢查是否以```結束並去除
-    if (cleanContent.includes("\n```")) {
-      cleanContent = cleanContent.replace(/\n```\s*$/m, "");
+    // if cleanContent contains `markdown`, then do this
+    if (cleanContent.includes("markdown")) {
+      cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
+      // 檢查是否以```結束並去除
+      if (cleanContent.includes("\n```")) {
+        cleanContent = cleanContent.replace(/\n```\s*$/m, "");
+      }
     }
 
     // Update raw markdown for raw view mode
@@ -135,7 +138,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     const importMarkdown = async () => {
       try {
         // Prepare markdown with proper code fence
-        const markdownContent = `\`\`\`${codeLanguage}\n${cleanContent}\n\`\`\``;
+        const markdownContent = cleanContent;
 
         // Convert markdown to BlockNote blocks
         const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
@@ -373,10 +376,10 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       // Get current content as markdown before switching to raw view
       editor.blocksToMarkdownLossy(editor.document).then((markdown) => {
         let cleanContent = markdown;
-        cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
-        if (cleanContent.includes("\n```")) {
-          cleanContent = cleanContent.replace(/\n```\s*$/m, "");
-        }
+        // cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
+        // if (cleanContent.includes("\n```")) {
+        //   cleanContent = cleanContent.replace(/\n```\s*$/m, "");
+        // }
         setRawMarkdown(cleanContent);
         setIsRawView(true);
       });

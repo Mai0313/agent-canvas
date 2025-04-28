@@ -49,6 +49,8 @@ LLM Chatbot Frontend UI
 
 ## TODO Features
 
+- 幫我把 blocksToMarkdownLossy 換成 tryParseMarkdownToBlocks
+
 - 幫我把這段功能
 
 ```
