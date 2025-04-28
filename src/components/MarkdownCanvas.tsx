@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ChatCompletion } from "../services/openai";
 import { Message } from "../types";
 import { getDefaultModelSettings } from "../utils/modelUtils";
-import { Components } from "react-markdown";
+import { ChatCompletion } from "../services/openai";
 import SelectionPopup from "./SelectionPopup";
+
+// Import BlockNote components and styles
+import "@blocknote/core/fonts/inter.css";
+import {
+  useCreateBlockNote,
+  getDefaultReactSlashMenuItems,
+  BlockNoteViewRaw,
+  SuggestionMenuController,
+} from "@blocknote/react";
+import "@blocknote/react/style.css";
+
 // 導入圖標
 import closeIcon from "../assets/icon/close-icon.svg";
 import copyCodeIcon from "../assets/icon/copy-code.svg";
@@ -17,7 +24,7 @@ interface MarkdownCanvasProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (content: string) => void;
-  onAskGpt?: (selectedText: string) => void; // Add this prop
+  onAskGpt?: (selectedText: string) => void;
 }
 
 const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
@@ -27,10 +34,31 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   onSave,
   onAskGpt,
 }) => {
+  // Create the editor instance with proper configuration
+  const editor = useCreateBlockNote({
+    // Providing a default block to avoid the "initialContent must be non-empty" error
+    initialContent: [
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Loading...",
+            styles: {}, // Add the required styles property
+          },
+        ],
+      },
+    ],
+  });
+
   const [editMode, setEditMode] = useState(false);
-  const [editableContent, setEditableContent] = useState(content);
+  const [rawMarkdown, setRawMarkdown] = useState("");
+  const [isRawView, setIsRawView] = useState(false);
+  const [loadingEditor, setLoadingEditor] = useState(true);
+
+  // Other existing states
   const canvasRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const rawEditorRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const [title, setTitle] = useState("Code Editor");
   const [codeLanguage, setCodeLanguage] = useState("plaintext");
@@ -38,20 +66,27 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const [copySuccess, setCopySuccess] = useState(false);
   const [contentFullyLoaded, setContentFullyLoaded] = useState(false);
   const [shouldGenerateTitle, setShouldGenerateTitle] = useState(false);
-  const [scrollPosition, setScrollPosition] = useState(0); // Add local scrollPosition state
+  const [scrollPosition, setScrollPosition] = useState(0);
 
   // Text selection state
   const [showSelectionPopup, setShowSelectionPopup] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
 
+  // Toggle editor editability when edit mode changes
   useEffect(() => {
-    setEditableContent(content);
-    setTitle("Code Editor"); // Reset title on content change
-    setContentFullyLoaded(false);
+    if (editor) {
+      // In newer versions of BlockNote, editable is a property not a method
+      // We need to recreate the editor with new options
+      editor._tiptapEditor.setEditable(editMode);
+    }
+  }, [editMode, editor]);
 
-    // Try to extract language from code block - match from the beginning of the content
-    // to handle streaming content properly
+  // Convert code to BlockNote format and update editor
+  useEffect(() => {
+    setLoadingEditor(true);
+
+    // Try to extract language from code block
     const languageMatch = content.match(/^```([^\s\n]+)/);
     if (languageMatch && languageMatch[1]) {
       setCodeLanguage(languageMatch[1]);
@@ -59,15 +94,41 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       setCodeLanguage("plaintext");
     }
 
-    // Set a delay to ensure all code blocks are fully processed
-    const fullLoadTimer = setTimeout(() => {
-      setContentFullyLoaded(true);
-      // Flag that we should generate a new title
-      setShouldGenerateTitle(true);
-    }, 300);
+    // Clean the content by removing markdown code fence markers
+    let cleanContent = content;
+    cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
+    if (cleanContent.trim().endsWith("```")) {
+      cleanContent = cleanContent.replace(/\n```\s*$/m, "");
+    }
 
-    return () => clearTimeout(fullLoadTimer);
-  }, [content]);
+    // Update raw markdown for raw view mode
+    setRawMarkdown(cleanContent);
+
+    // Update BlockNote editor content
+    const importMarkdown = async () => {
+      try {
+        // Prepare markdown with proper code fence
+        const markdownContent = `\`\`\`${codeLanguage}\n${cleanContent}\n\`\`\``;
+
+        // Convert markdown to BlockNote blocks
+        const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
+
+        // Make sure we have valid blocks before replacing
+        if (blocks && blocks.length > 0) {
+          editor.replaceBlocks(editor.document, blocks);
+        }
+
+        setContentFullyLoaded(true);
+        setShouldGenerateTitle(true);
+      } catch (error) {
+        console.error("Error parsing markdown to blocks:", error);
+      } finally {
+        setLoadingEditor(false);
+      }
+    };
+
+    importMarkdown();
+  }, [content, editor, codeLanguage]);
 
   // Reset copy success message after 2 seconds
   useEffect(() => {
@@ -99,132 +160,65 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       }, 10);
       return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, editMode]); // Removed scrollPosition dependency to fix the warning
+  }, [isOpen, editMode, scrollPosition]);
 
-  // Adjust textarea height on resize
+  // Listen for selection changes in the editor
   useEffect(() => {
-    const handleResize = () => {
-      if (textareaRef.current && canvasRef.current) {
-        const headerHeight =
-          canvasRef.current.querySelector(".markdown-header")?.clientHeight ||
-          0;
-        const containerHeight = canvasRef.current.clientHeight;
-        textareaRef.current.style.height = `${containerHeight - headerHeight - 10}px`;
+    const handleSelection = () => {
+      if (isRawView || editMode) return;
+
+      const selection = window.getSelection();
+      // Check if there's a text selection
+      if (
+        selection &&
+        !selection.isCollapsed &&
+        selection.toString().trim() !== ""
+      ) {
+        const selectedContent = selection.toString();
+        setSelectedText(selectedContent);
+
+        // Calculate position for the popup
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+
+        setPopupPosition({
+          top: rect.bottom + window.scrollY + 5,
+          left: rect.left + window.scrollX + rect.width / 2 - 40,
+        });
+
+        setShowSelectionPopup(true);
+      } else {
+        setShowSelectionPopup(false);
       }
     };
 
-    // Set initial size
-    handleResize();
+    // Handle mouse up events for selection
+    const handleMouseUp = () => {
+      handleSelection();
+    };
 
-    // Add resize event listener
-    window.addEventListener("resize", handleResize);
+    document.addEventListener("mouseup", handleMouseUp);
 
-    // Create a MutationObserver to watch for changes in parent container size
-    const resizeObserver = new ResizeObserver(() => {
-      handleResize();
+    // Create a mutation observer to watch for selection changes
+    const selectionObserver = new MutationObserver(() => {
+      handleSelection();
     });
 
-    if (canvasRef.current) {
-      resizeObserver.observe(canvasRef.current);
+    // Observe the editor container
+    const editorContainer = document.querySelector(".bn-container");
+    if (editorContainer) {
+      selectionObserver.observe(editorContainer, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
     }
 
     return () => {
-      window.removeEventListener("resize", handleResize);
-      resizeObserver.disconnect();
+      selectionObserver.disconnect();
+      document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isOpen, editMode]);
-
-  // Get clean code content (without markdown fence)
-  const getCleanCodeContent = useCallback((): string => {
-    // Clean the content by removing markdown code fence markers
-    let cleanContent = editableContent;
-
-    // Remove opening code fence with language identifier (```python, ```javascript, etc.)
-    cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
-
-    // Remove closing code fence - only if it exists and is at the end
-    if (cleanContent.trim().endsWith("```")) {
-      cleanContent = cleanContent.replace(/\n```\s*$/m, "");
-    }
-
-    return cleanContent;
-  }, [editableContent]);
-
-  const handleEdit = () => {
-    setEditMode(true);
-  };
-
-  const handleSave = () => {
-    onSave(editableContent);
-    setEditMode(false);
-    // Generate new title after saving edits
-    setShouldGenerateTitle(true);
-  };
-
-  const handleCancel = () => {
-    setEditableContent(content);
-    setEditMode(false);
-  };
-
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditableContent(e.target.value);
-
-    // Try to extract language from code block as user types
-    const languageMatch = e.target.value.match(/^```([^\s\n]+)/);
-    if (languageMatch && languageMatch[1]) {
-      setCodeLanguage(languageMatch[1]);
-    }
-  };
-
-  const handleCopyCode = () => {
-    const cleanContent = getCleanCodeContent();
-
-    navigator.clipboard.writeText(cleanContent).then(
-      () => {
-        setCopySuccess(true);
-      },
-      () => {
-        console.error("Failed to copy code");
-      },
-    );
-  };
-
-  // Handle wheel events to prevent parent container scrolling
-  const handleWheel = (e: React.WheelEvent) => {
-    // Prevent parent scrolling when cursor is over code area
-    e.stopPropagation();
-  };
-
-  // Text selection handler for preview mode
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if (editMode) return; // Don't show popup in edit mode
-
-    const selection = window.getSelection();
-
-    // If there's a selection and it's not empty
-    if (
-      selection &&
-      !selection.isCollapsed &&
-      selection.toString().trim() !== ""
-    ) {
-      const selectedContent = selection.toString();
-      setSelectedText(selectedContent);
-
-      // Calculate position for the popup
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-
-      setPopupPosition({
-        top: rect.bottom + window.scrollY + 5, // Position below the selection with a small gap
-        left: rect.left + window.scrollX + rect.width / 2 - 40, // Center the popup
-      });
-
-      setShowSelectionPopup(true);
-    } else {
-      setShowSelectionPopup(false);
-    }
-  };
+  }, [editor, isRawView, editMode]);
 
   // Close popup when clicking outside
   useEffect(() => {
@@ -243,6 +237,99 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     };
   }, []);
 
+  // Get clean code content from the editor
+  const getCleanCodeContent = useCallback(async (): Promise<string> => {
+    if (isRawView) {
+      return rawMarkdown;
+    }
+
+    try {
+      const markdown = await editor.blocksToMarkdownLossy(editor.document);
+      // Remove markdown fence if present
+      let cleanContent = markdown;
+      cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
+      if (cleanContent.trim().endsWith("```")) {
+        cleanContent = cleanContent.replace(/\n```\s*$/m, "");
+      }
+      return cleanContent;
+    } catch (error) {
+      console.error("Error converting blocks to markdown:", error);
+      return rawMarkdown;
+    }
+  }, [editor, isRawView, rawMarkdown]);
+
+  // Toggle edit mode
+  const handleEdit = () => {
+    setEditMode(true);
+  };
+
+  // Save changes
+  const handleSave = async () => {
+    let contentToSave;
+
+    if (isRawView) {
+      contentToSave = rawMarkdown;
+
+      // Update the BlockNote editor content from raw markdown
+      try {
+        const markdownContent = `\`\`\`${codeLanguage}\n${rawMarkdown}\n\`\`\``;
+        const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
+        editor.replaceBlocks(editor.document, blocks);
+      } catch (error) {
+        console.error("Error updating editor content:", error);
+      }
+    } else {
+      contentToSave = await getCleanCodeContent();
+    }
+
+    onSave(contentToSave);
+    setEditMode(false);
+    setShouldGenerateTitle(true);
+  };
+
+  // Cancel edit
+  const handleCancel = () => {
+    setIsRawView(false);
+    setEditMode(false);
+
+    // Reset editor content to original
+    const importOriginalMarkdown = async () => {
+      try {
+        const cleanContent = content
+          .replace(/^```[\w-]*\s*\n/m, "")
+          .replace(/\n```\s*$/m, "");
+        const markdownContent = `\`\`\`${codeLanguage}\n${cleanContent}\n\`\`\``;
+        const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
+        editor.replaceBlocks(editor.document, blocks);
+      } catch (error) {
+        console.error("Error resetting editor content:", error);
+      }
+    };
+
+    importOriginalMarkdown();
+  };
+
+  // Handle raw markdown changes in textarea
+  const handleRawMarkdownChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    setRawMarkdown(e.target.value);
+  };
+
+  // Copy code to clipboard
+  const handleCopyCode = async () => {
+    const cleanContent = await getCleanCodeContent();
+
+    navigator.clipboard.writeText(cleanContent).then(
+      () => {
+        setCopySuccess(true);
+      },
+      () => {
+        console.error("Failed to copy code");
+      },
+    );
+  };
+
   // Handle "Ask GPT" button click
   const handleAskGpt = (text: string) => {
     if (onAskGpt) {
@@ -251,9 +338,43 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     }
   };
 
-  // Wrap generateTitle in useCallback to memoize it
+  // Toggle raw view
+  const toggleRawView = () => {
+    if (!isRawView) {
+      // Get current content as markdown before switching to raw view
+      editor.blocksToMarkdownLossy(editor.document).then((markdown) => {
+        let cleanContent = markdown;
+        cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
+        if (cleanContent.trim().endsWith("```")) {
+          cleanContent = cleanContent.replace(/\n```\s*$/m, "");
+        }
+        setRawMarkdown(cleanContent);
+        setIsRawView(true);
+      });
+    } else {
+      setIsRawView(false);
+
+      // Update the editor with the raw markdown
+      const updateFromRaw = async () => {
+        try {
+          const markdownContent = `\`\`\`${codeLanguage}\n${rawMarkdown}\n\`\`\``;
+          const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
+          editor.replaceBlocks(editor.document, blocks);
+        } catch (error) {
+          console.error("Error updating from raw markdown:", error);
+        }
+      };
+
+      updateFromRaw();
+    }
+  };
+
+  // Generate title for the code snippet
   const generateTitle = useCallback(async () => {
-    if (!editableContent.trim()) return;
+    if (loadingEditor) return;
+
+    const cleanContent = await getCleanCodeContent();
+    if (!cleanContent.trim()) return;
 
     setIsGeneratingTitle(true);
     console.log("Generating title via Chat Completion API");
@@ -273,7 +394,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
         {
           id: "user-msg",
           role: "user",
-          content: `Given this code snippet, provide a short, descriptive title (3-5 words) that describes what the code does. Don't include words like "code", "function", "class", etc. Just give the title directly:\n\n${getCleanCodeContent()}`,
+          content: `Given this code snippet, provide a short, descriptive title (3-5 words) that describes what the code does. Don't include words like "code", "function", "class", etc. Just give the title directly:\n\n${cleanContent}`,
           timestamp: new Date(),
         },
       ];
@@ -292,25 +413,18 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       console.error("Error generating title:", error);
     } finally {
       setIsGeneratingTitle(false);
-      // Reset the flag after generation attempt
       setShouldGenerateTitle(false);
     }
-  }, [editableContent, getCleanCodeContent]);
+  }, [getCleanCodeContent, loadingEditor]);
 
   // Effect for title generation based on shouldGenerateTitle flag
   useEffect(() => {
-    // Only attempt to generate a title when:
-    // 1. The shouldGenerateTitle flag is true
-    // 2. Content is fully loaded
-    // 3. The canvas is open
-    // 4. There is content to analyze
-    // 5. We're not already generating a title
     if (
       shouldGenerateTitle &&
       contentFullyLoaded &&
       isOpen &&
-      editableContent.trim() &&
-      !isGeneratingTitle
+      !isGeneratingTitle &&
+      !loadingEditor
     ) {
       const titleTimer = setTimeout(() => {
         generateTitle();
@@ -321,62 +435,14 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     shouldGenerateTitle,
     contentFullyLoaded,
     isOpen,
-    editableContent,
     isGeneratingTitle,
     generateTitle,
+    loadingEditor,
   ]);
 
   // Handle close button click
   const handleClose = () => {
     onClose();
-  };
-
-  // Define component mapping for ReactMarkdown
-  const components: Components = {
-    code({ className, children, ...rest }) {
-      // Extract language from class name
-      const match = /language-(\w+)/.exec(className || "");
-      const language = match ? match[1] : "text";
-      let codeString = String(children).replace(/\n$/, "");
-
-      // Remove any triple backticks that might have been included incorrectly
-      codeString = codeString.replace(/```/g, "");
-
-      return !className?.includes("inline") ? (
-        <div className='code-block-container'>
-          <SyntaxHighlighter
-            style={vscDarkPlus as any}
-            language={language}
-            wrapLines={false}
-            wrapLongLines={false}
-            customStyle={{
-              margin: 0,
-              padding: "16px",
-              borderRadius: "6px",
-              overflow: "auto",
-              maxWidth: "100%",
-            }}
-          >
-            {codeString}
-          </SyntaxHighlighter>
-        </div>
-      ) : (
-        <code className={className} {...rest}>
-          {children}
-        </code>
-      );
-    },
-  };
-
-  // Prepare markdown content for react-markdown
-  const prepareMarkdownContent = (): string => {
-    const cleanContent = getCleanCodeContent();
-    // Make sure there's no trailing backticks that could be misinterpreted
-    const safeContent = cleanContent.replace(/```\s*$/g, "");
-
-    // Ensure we have proper opening and closing markers
-    // This prevents react-markdown from misinterpreting markers
-    return `\`\`\`${codeLanguage}\n${safeContent}${!safeContent.endsWith("\n") ? "\n" : ""}\`\`\``;
   };
 
   if (!isOpen) return null;
@@ -390,7 +456,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             title='Close editor'
             className='close-button'
           >
-            <img src={closeIcon} alt="Close" width="24" height="24" />
+            <img src={closeIcon} alt='Close' width='24' height='24' />
           </button>
           <h3>{title}</h3>
           <div className='language-badge'>
@@ -403,6 +469,13 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
           >
             {isGeneratingTitle ? "Generating..." : "AI Title"}
           </button>
+          <button
+            onClick={toggleRawView}
+            className='title-button'
+            style={{ marginLeft: "8px" }}
+          >
+            {isRawView ? "Editor View" : "Raw View"}
+          </button>
         </div>
         <div className='markdown-controls'>
           <button
@@ -410,7 +483,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             className={`icon-button ${copySuccess ? "success" : ""}`}
             title={copySuccess ? "Copied!" : "Copy code"}
           >
-            <img src={copyCodeIcon} alt="Copy" width="24" height="24" />
+            <img src={copyCodeIcon} alt='Copy' width='24' height='24' />
           </button>
           {!editMode ? (
             <button
@@ -418,7 +491,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
               className='icon-button'
               title='Edit code'
             >
-              <img src={editCodeIcon} alt="Edit" width="24" height="24" />
+              <img src={editCodeIcon} alt='Edit' width='24' height='24' />
             </button>
           ) : (
             <>
@@ -432,26 +505,31 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
           )}
         </div>
       </div>
+
       <div className='markdown-content'>
-        {editMode ? (
+        {loadingEditor ? (
+          <div className='loading-editor'>Loading editor...</div>
+        ) : isRawView ? (
           <textarea
-            ref={textareaRef}
-            value={editableContent}
-            onChange={handleContentChange}
+            ref={rawEditorRef}
+            value={rawMarkdown}
+            onChange={handleRawMarkdownChange}
             className='markdown-editor'
-            onWheel={handleWheel}
-            wrap='off' // Disable line wrapping to allow horizontal scrolling
+            wrap='off'
           />
         ) : (
           <div
-            className='markdown-preview'
+            className='blocknote-container'
             ref={previewRef}
-            onWheel={handleWheel}
-            onMouseUp={handleMouseUp}
+            style={{ height: "100%" }}
           >
-            <ReactMarkdown components={components}>
-              {prepareMarkdownContent()}
-            </ReactMarkdown>
+            {/* Using BlockNoteViewRaw with proper configuration */}
+            <BlockNoteViewRaw editor={editor} theme='dark' editable={editMode}>
+              <SuggestionMenuController
+                triggerCharacter='/'
+                getItems={async () => getDefaultReactSlashMenuItems(editor)}
+              />
+            </BlockNoteViewRaw>
 
             {showSelectionPopup && (
               <SelectionPopup

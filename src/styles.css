@@ -20,6 +20,15 @@
   --canvas-border-color: #444444;
   --canvas-button-hover: #3a3d41;
   --canvas-success-color: #4caf50;
+
+  /* BlockNote theme customizations */
+  --bn-colors-editor-background: var(--canvas-bg-color);
+  --bn-colors-editor-text: var(--canvas-text-color);
+  --bn-colors-menu-background: var(--canvas-header-bg);
+  --bn-colors-menu-text: var(--canvas-text-color);
+  --bn-colors-tooltip-background: var(--canvas-header-bg);
+  --bn-colors-tooltip-text: var(--canvas-text-color);
+  --bn-colors-selection: rgba(44, 123, 229, 0.3);
 }
 
 * {
@@ -478,11 +487,62 @@ body {
   tab-size: 2;
 }
 
-.markdown-preview {
+/* Loading indicator for the editor */
+.loading-editor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--canvas-text-color);
+  font-size: 16px;
+  background-color: var(--canvas-bg-color);
+  opacity: 0.8;
+}
+
+/* BlockNote specific styling */
+.blocknote-container {
   width: 100%;
   height: 100%;
-  overflow-y: auto;
-  padding: 16px;
+  overflow: auto;
+  background-color: var(--canvas-bg-color);
+}
+
+/* Customize BlockNote editor to match our theme */
+.bn-container {
+  background-color: var(--canvas-bg-color) !important;
+  color: var(--canvas-text-color) !important;
+  height: 100%;
+}
+
+.bn-editor {
+  height: 100% !important;
+  padding: 16px !important;
+  font-family: "Consolas", "Monaco", "Courier New", monospace !important;
+}
+
+/* Style BlockNote code blocks */
+.bn-code-block {
+  background-color: #292b36 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+}
+
+.bn-code {
+  font-family: "Consolas", "Monaco", "Courier New", monospace !important;
+  font-size: 14px !important;
+}
+
+/* Style BlockNote toolbar */
+.bn-toolbar {
+  background-color: var(--canvas-header-bg) !important;
+  border-bottom: 1px solid var(--canvas-border-color) !important;
+}
+
+/* Style BlockNote menu items */
+.bn-menu {
+  background-color: var(--canvas-header-bg) !important;
+  border: 1px solid var(--canvas-border-color) !important;
+  color: var(--canvas-text-color) !important;
 }
 
 /* Syntax highlighting containers */
@@ -874,4 +934,19 @@ body {
   .selection-popup {
     min-width: 120px;
   }
+}
+
+/* BlockNote theme customizations */
+.custom-blocknote-theme .bn-container {
+  border: none;
+}
+
+/* Adjust focus ring color to match our theme */
+.bn-editor:focus-visible {
+  outline-color: var(--primary-color) !important;
+}
+
+/* Ensure proper spacing in the editor */
+.bn-editor .ProseMirror {
+  padding: 16px;
 }

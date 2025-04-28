@@ -238,7 +238,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             disabled={!inputValue.trim() || isLoading}
             aria-label='Send message'
           >
-            <img src={sendMessageIcon} alt="Send" className="icon-2xl" />
+            <img src={sendMessageIcon} alt='Send' className='icon-2xl' />
           </button>
         </div>
       </form>
