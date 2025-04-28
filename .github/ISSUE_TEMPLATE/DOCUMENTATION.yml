@@ -3,14 +3,14 @@ description: Report an issue related to AI-Thermal-Simulator-pl
 title: "[DOC] <title>"
 labels: ["Documentation", "Needs Triage"]
 body:
-- type: textarea
-  attributes:
-    label: 📚 The doc issue
-    description: >
-      A clear and concise description of what the issue is about.
-  validations:
-    required: true
-- type: markdown
-  attributes:
-    value: >
-      Thanks for contributing 🎉!
+  - type: textarea
+    attributes:
+      label: 📚 The doc issue
+      description: >
+        A clear and concise description of what the issue is about.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for contributing 🎉!

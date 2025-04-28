@@ -11,7 +11,7 @@ RUN curl -s http://172.21.69.138/gpgkey/ca.crt > /usr/local/share/ca-certificate
 
 ########################################################################################
 
-FROM builder AS frontend
+FROM builder AS prod
 WORKDIR /app
 COPY . .
 RUN yarn install && \
