@@ -1,16 +1,14 @@
 const { spawn } = require("child_process");
 const path = require("path");
-const fs = require("fs");
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-let port = "3000"; // Default port
-let host = "localhost"; // Default host
+let port = "3000"; // Default production port
+let host = "0.0.0.0"; // Default host for production (accessible from outside)
 
 // Parse --port and --host parameters
 for (let i = 0; i < args.length; i++) {
   const arg = args[i];
-
   if (arg.startsWith("--port=")) {
     port = arg.split("=")[1];
   } else if (arg === "--port" && i + 1 < args.length) {
@@ -22,27 +20,27 @@ for (let i = 0; i < args.length; i++) {
   }
 }
 
-// Check if build directory exists
-const buildPath = path.resolve(__dirname, "../build");
-if (!fs.existsSync(buildPath)) {
-  console.error(
-    'Error: Build directory not found. Please run "yarn build" first.',
-  );
-  process.exit(1);
-}
+// Set environment variables
+process.env.PORT = port;
+process.env.HOST = host;
 
 console.log(`Starting production server on ${host}:${port}`);
 
-// Start serve to serve the built files
-const servePath = path.resolve(__dirname, "../node_modules/.bin/serve");
+// Path to the build directory
+const buildPath = path.resolve(__dirname, "../build");
 
-const childProcess = spawn(
-  servePath,
-  ["-s", buildPath, "-l", port, "-h", host],
-  {
-    stdio: "inherit",
-  },
-);
+// Start serve with appropriate options
+const servePath = path.resolve(__dirname, "../node_modules/.bin/serve");
+const serveArgs = ["-s", buildPath, "-l", port];
+
+// Note: serve doesn't support --listen-host directly, but we can set the HOST env variable
+// which is used by many Node-based servers including serve
+process.env.HOST = host;
+
+const childProcess = spawn(servePath, serveArgs, {
+  stdio: "inherit",
+  env: { ...process.env },
+});
 
 // Forward signals
 process.on("SIGINT", () => childProcess.kill("SIGINT"));
