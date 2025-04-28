@@ -228,7 +228,7 @@ const App: React.FC = () => {
     if (!message) return;
 
     // Only process text content
-    const messageContent = typeof message.content === 'string' ? message.content : '';
+    const messageContent = typeof message.content === "string" ? message.content : "";
 
     // Check for in-progress code blocks with 5+ lines
     const { codeBlock, blockPosition, lineCount } = detectInProgressCodeBlock(messageContent, 5);
@@ -244,7 +244,12 @@ const App: React.FC = () => {
     }
 
     // If we have an active code block that's being updated
-    if (codeBlockDetected && editingMessageId === streamingMessageId && codeBlockPosition && typeof message.content === 'string') {
+    if (
+      codeBlockDetected &&
+      editingMessageId === streamingMessageId &&
+      codeBlockPosition &&
+      typeof message.content === "string"
+    ) {
       // Get the updated in-progress code block
       const updatedBlock = message.content.substring(codeBlockPosition.start);
       setMarkdownContent(updatedBlock);
@@ -646,7 +651,7 @@ const App: React.FC = () => {
 
           {isLoading && (
             <div className='loading-indicator'>
-              <p>AI is thinking...</p>
+              <p>Thinking...</p>
             </div>
           )}
 

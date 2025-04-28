@@ -105,7 +105,7 @@ export const chatCompletion = async (
     // 檢查是否需要串流模式
     if (onToken) {
       console.log("Sending streaming request to:", settings.baseUrl);
-      
+
       // Properly type the streaming response
       type ChatCompletionChunk = {
         id: string;
@@ -121,15 +121,17 @@ export const chatCompletion = async (
           finish_reason: string | null;
         }>;
       };
-      
+
       // Create streaming request with proper typing
       const streamingOptions = {
         ...requestOptions,
         stream: true,
       };
-      
+
       // Explicitly type the response as a Stream of ChatCompletionChunk
-      const stream = await client.chat.completions.create(streamingOptions) as unknown as Stream<ChatCompletionChunk>;
+      const stream = (await client.chat.completions.create(
+        streamingOptions,
+      )) as unknown as Stream<ChatCompletionChunk>;
 
       let fullResponse = "";
       for await (const chunk of stream) {

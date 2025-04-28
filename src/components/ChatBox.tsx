@@ -249,10 +249,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   };
 
   return (
-    <div className="chat-box">
-      <div className="messages-container" ref={messagesContainerRef}>
+    <div className='chat-box'>
+      <div className='messages-container' ref={messagesContainerRef}>
         {messages.length === 0 ? (
-          <div className="empty-state">
+          <div className='empty-state'>
             <h2>Start a conversation with {settings.model}</h2>
             <p>Type your message below to begin</p>
           </div>
@@ -287,10 +287,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      <form className="chat-input-form" onSubmit={handleSubmit}>
-        <div className="input-controls">
+      <form className='chat-input-form' onSubmit={handleSubmit}>
+        <div className='input-controls'>
           <button
-            type="button"
+            type='button'
             className={`mode-button ${imageMode ? "active" : ""}`}
             onClick={toggleImageMode}
             disabled={isLoading}
@@ -300,13 +300,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         </div>
 
         {quotedText && (
-          <div className="quoted-text-container">
-            <div className="quoted-text">
-              <div className="quote-marker"></div>
-              <div className="quote-content">
+          <div className='quoted-text-container'>
+            <div className='quoted-text'>
+              <div className='quote-marker'></div>
+              <div className='quote-content'>
                 {quotedText.length > 100 ? quotedText.substring(0, 100) + "..." : quotedText}
               </div>
-              <button className="quote-remove-button" onClick={removeQuotedText}>
+              <button className='quote-remove-button' onClick={removeQuotedText}>
                 ✕
               </button>
             </div>
@@ -314,15 +314,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         )}
 
         {pastedImages.length > 0 && (
-          <div className="pasted-images-container">
+          <div className='pasted-images-container'>
             {pastedImages.map((image, index) => (
-              <div key={index} className="pasted-image-item">
+              <div key={index} className='pasted-image-item'>
                 <img
                   src={image.url}
                   alt={`Pasted ${index + 1}`}
-                  className="pasted-image-preview"
+                  className='pasted-image-preview'
                 />
-                <button className="image-remove-button" onClick={() => removeImage(index)}>
+                <button className='image-remove-button' onClick={() => removeImage(index)}>
                   ✕
                 </button>
               </div>
@@ -330,7 +330,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           </div>
         )}
 
-        <div className="input-row">
+        <div className='input-row'>
           <textarea
             ref={textAreaRef}
             value={inputValue}
@@ -339,8 +339,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               quotedText
                 ? "Ask about the selected text..."
                 : pastedImages.length > 0
-                ? "Add a description for your image..."
-                : "Type your message or paste an image (Ctrl+V)..."
+                  ? "Add a description for your image..."
+                  : "Type your message or paste an image (Ctrl+V)..."
             }
             rows={3}
             onKeyDown={(e) => {
@@ -355,13 +355,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             disabled={isLoading}
           />
           <button
-            type="submit"
-            className="send-button"
+            type='submit'
+            className='send-button'
             // Fix the mixed operator precedence with parentheses
-            disabled={((!inputValue.trim() && pastedImages.length === 0) || isLoading)}
-            aria-label="Send message"
+            disabled={(!inputValue.trim() && pastedImages.length === 0) || isLoading}
+            aria-label='Send message'
           >
-            <img src={sendMessageIcon} alt="Send" className="icon-2xl" />
+            <img src={sendMessageIcon} alt='Send' className='icon-2xl' />
           </button>
         </div>
       </form>
