@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect, useRef } from "react";
+import React, { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { Message } from "../types";
 import SelectionPopup from "./SelectionPopup";
 
@@ -53,6 +53,21 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Helper function to convert message content to string, wrapped in useCallback
+  const getMessageContentAsString = useCallback((): string => {
+    if (typeof message.content === "string") {
+      return message.content;
+    } else if (Array.isArray(message.content)) {
+      // Join text parts from the message content array
+      return message.content
+        .filter((item) => item.type === "text")
+        .map((item) => item.text)
+        .filter(Boolean)
+        .join("\n");
+    }
+    return "";
+  }, [message.content]);
+
   // 當模型下拉選單打開時，獲取可用模型
   useEffect(() => {
     if (showModelDropdown && fetchModels && !availableModels.length && !loadingModels) {
@@ -73,7 +88,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   // 當進入編輯模式時，設置初始內容
   useEffect(() => {
     if (isEditMode) {
-      setEditedContent(message.content);
+      setEditedContent(getMessageContentAsString());
       // 聚焦文本框並移動光標到末尾
       setTimeout(() => {
         if (textareaRef.current) {
@@ -83,7 +98,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         }
       }, 0);
     }
-  }, [isEditMode, message.content]);
+  }, [isEditMode, getMessageContentAsString]);
 
   // 處理點擊外部關閉下拉選單
   useEffect(() => {
@@ -136,13 +151,15 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
   // 處理複製按鈕點擊事件
   const handleCopy = () => {
+    const contentToCopy = getMessageContentAsString();
+
     if (onCopy) {
-      onCopy(message.content);
+      onCopy(contentToCopy);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } else {
       // 備用方案：直接使用 clipboard API
-      navigator.clipboard.writeText(message.content).then(
+      navigator.clipboard.writeText(contentToCopy).then(
         () => {
           setCopySuccess(true);
           setTimeout(() => setCopySuccess(false), 2000);
@@ -170,7 +187,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   // 處理取消按鈕點擊事件
   const handleCancel = () => {
     setIsEditMode(false);
-    setEditedContent(message.content);
+    setEditedContent(getMessageContentAsString());
   };
 
   // 處理刪除按鈕點擊事件
@@ -193,24 +210,45 @@ const MessageItem: React.FC<MessageItemProps> = ({
     setShowModelDropdown(!showModelDropdown);
   };
 
+  // Function to render images from MessageContent array
+  const renderMessageImages = () => {
+    if (Array.isArray(message.content)) {
+      return message.content
+        .filter((item) => item.type === "image_url")
+        .map(
+          (item, index) =>
+            item.image_url && (
+              <div key={`img-${index}`} className="message-image-container">
+                <img
+                  src={item.image_url.url}
+                  alt="Attached"
+                  className="message-image"
+                />
+              </div>
+            ),
+        );
+    }
+    return null;
+  };
+
   // Function to render the message content with a "View Code" button if needed
   const processMessageContent = (): ReactNode[] => {
     // 如果處於編輯模式，渲染文本編輯區
     if (isEditMode && message.role === "assistant") {
       return [
-        <div key='edit-container' className='edit-container'>
+        <div key="edit-container" className="edit-container">
           <textarea
             ref={textareaRef}
             value={editedContent}
             onChange={(e) => setEditedContent(e.target.value)}
-            className='edit-textarea'
+            className="edit-textarea"
             rows={Math.max(5, editedContent.split("\n").length)}
           />
-          <div className='edit-buttons'>
-            <button onClick={handleSave} className='edit-save-button'>
+          <div className="edit-buttons">
+            <button onClick={handleSave} className="edit-save-button">
               Send
             </button>
-            <button onClick={handleCancel} className='edit-cancel-button'>
+            <button onClick={handleCancel} className="edit-cancel-button">
               Cancel
             </button>
           </div>
@@ -221,25 +259,55 @@ const MessageItem: React.FC<MessageItemProps> = ({
     // 如果正在生成圖像，顯示動態加載效果
     if (message.isGeneratingImage) {
       return [
-        <div key='generating-image' className='generating-image-container'>
-          <div className='generating-image-animation'>
-            <div className='brush-stroke'></div>
-            <div className='brush-stroke'></div>
-            <div className='brush-stroke'></div>
+        <div key="generating-image" className="generating-image-container">
+          <div className="generating-image-animation">
+            <div className="brush-stroke"></div>
+            <div className="brush-stroke"></div>
+            <div className="brush-stroke"></div>
           </div>
-          <div className='generating-image-text'>{message.content}</div>
+          <div className="generating-image-text">
+            {typeof message.content === "string"
+              ? message.content
+              : "Creating your Image..."}
+          </div>
         </div>,
       ];
     }
 
+    // Handle array type content
+    if (Array.isArray(message.content)) {
+      const elements: ReactNode[] = [];
+
+      // Add text content
+      const textItems = message.content.filter((item) => item.type === "text");
+      textItems.forEach((item, idx) => {
+        if (item.text) {
+          const lines = item.text.split("\n");
+          lines.forEach((line, lineIdx) => {
+            elements.push(
+              <div key={`text-${idx}-line-${lineIdx}`}>{line || <br />}</div>,
+            );
+          });
+        }
+      });
+
+      return elements;
+    }
+
+    // From here on, we know message.content is a string
+    const messageContent = message.content as string;
+
     // Check if there's a code block in the message
-    const hasCodeBlock = message.content.includes("```");
+    const hasCodeBlock = messageContent.includes("```");
 
     // If this message has a code block that's currently being displayed in the canvas
     if (hasCodeBlock && isEditing && longestCodeBlockPosition) {
       // Create message parts: before the code block, a placeholder, and after the code block
-      const beforeCode = message.content.substring(0, longestCodeBlockPosition.start);
-      const afterCode = message.content.substring(longestCodeBlockPosition.end);
+      const beforeCode = messageContent.substring(
+        0,
+        longestCodeBlockPosition.start,
+      );
+      const afterCode = messageContent.substring(longestCodeBlockPosition.end);
 
       // Create an array of elements
       const elements: ReactNode[] = [];
@@ -249,7 +317,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
         elements.push(
           ...beforeCode
             .split("\n")
-            .map((line, i) => <div key={`before-${i}`}>{line || <br />}</div>),
+            .map(
+              (line: string, i: number) => <div key={`before-${i}`}>{line || <br />}</div>,
+            ),
         );
       }
 
@@ -258,7 +328,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
         elements.push(
           ...afterCode
             .split("\n")
-            .map((line, i) => <div key={`after-${i}`}>{line || <br />}</div>),
+            .map(
+              (line: string, i: number) => <div key={`after-${i}`}>{line || <br />}</div>,
+            ),
         );
       }
 
@@ -266,7 +338,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
     }
 
     // Regular content display (no code blocks or not currently editing)
-    return message.content.split("\n").map((line, i) => <div key={i}>{line || <br />}</div>);
+    return messageContent
+      .split("\n")
+      .map((line: string, i: number) => <div key={i}>{line || <br />}</div>);
   };
 
   // Handle "Ask GPT" button click
@@ -285,76 +359,100 @@ const MessageItem: React.FC<MessageItemProps> = ({
       } ${isEditMode ? "editing" : ""}`}
       onMouseUp={handleMouseUp}
     >
-      <div className='message-header'>
-        <span className='role'>{message.role === "assistant" ? "AI" : "You"}</span>
-        <span className='timestamp'>
+      <div className="message-header">
+        <span className="role">
+          {message.role === "assistant" ? "AI" : "You"}
+        </span>
+        <span className="timestamp">
           {message.timestamp.toLocaleTimeString()}
           {isStreaming && !message.isGeneratingImage && (
-            <span className='streaming-indicator'> (typing...)</span>
+            <span className="streaming-indicator"> (typing...)</span>
           )}
         </span>
       </div>
 
-      <div className='message-content'>
+      <div className="message-content">
         {processMessageContent()}
         {isStreaming && message.content === "" && !message.isGeneratingImage && (
-          <div className='typing-indicator'>...</div>
+          <div className="typing-indicator">...</div>
         )}
+        {/* Render images from message content array */}
+        {Array.isArray(message.content) && renderMessageImages()}
+        {/* Render legacy image URL if present */}
         {message.imageUrl && (
-          <div className='message-image-container'>
-            <img src={message.imageUrl} alt='AI generated content' className='message-image' />
+          <div className="message-image-container">
+            <img
+              src={message.imageUrl}
+              alt="Generated"
+              className="message-image"
+            />
           </div>
         )}
       </div>
 
       {/* 消息操作按鈕 - 只在助手消息且非編輯模式下顯示 */}
       {message.role === "assistant" && !isEditMode && !isStreaming && (
-        <div className='message-actions'>
+        <div className="message-actions">
           <button
             onClick={handleCopy}
-            className={`action-button with-icon ${copySuccess ? "copy-success" : ""}`}
-            title='Copy to clipboard'
+            className={`action-button with-icon ${
+              copySuccess ? "copy-success" : ""
+            }`}
+            title="Copy to clipboard"
           >
-            <img src={copyCodeIcon} alt='Copy' className='icon-action' />
+            <img src={copyCodeIcon} alt="Copy" className="icon-action" />
             {copySuccess ? "Copied" : "Copy"}
           </button>
 
-          <button onClick={handleEdit} className='action-button with-icon' title='Edit message'>
-            <img src={editCodeIcon} alt='Edit' className='icon-action' />
+          <button
+            onClick={handleEdit}
+            className="action-button with-icon"
+            title="Edit message"
+          >
+            <img src={editCodeIcon} alt="Edit" className="icon-action" />
             Edit
           </button>
 
           <button
             onClick={handleDelete}
-            className='action-button with-icon'
-            title='Delete message'
+            className="action-button with-icon"
+            title="Delete message"
           >
-            <img src={deleteIcon} alt='Delete' className='icon-action' />
+            <img src={deleteIcon} alt="Delete" className="icon-action" />
             Delete
           </button>
 
-          <div className='regenerate-dropdown-container' ref={dropdownRef}>
+          <div className="regenerate-dropdown-container" ref={dropdownRef}>
             <button
               onClick={toggleModelDropdown}
-              className='action-button with-icon regenerate-button'
-              title='Regenerate response'
+              className="action-button with-icon regenerate-button"
+              title="Regenerate response"
             >
-              <img src={regenerateIcon} alt='Regenerate' className='icon-action' />
+              <img
+                src={regenerateIcon}
+                alt="Regenerate"
+                className="icon-action"
+              />
               Regenerate {showModelDropdown ? "▲" : "▼"}
             </button>
 
             {showModelDropdown && (
-              <div className='model-dropdown'>
-                <div className='model-dropdown-header'>Choose model:</div>
+              <div className="model-dropdown">
+                <div className="model-dropdown-header">Choose model:</div>
 
                 {/* 當前模型選項 */}
-                <div className='model-dropdown-item' onClick={() => handleRegenerate()}>
+                <div
+                  className="model-dropdown-item"
+                  onClick={() => handleRegenerate()}
+                >
                   Current ({currentModel || "default"})
                 </div>
 
                 {/* 載入提示 */}
                 {(loadingModels || isLoadingModels) && (
-                  <div className='model-dropdown-item loading'>Loading models...</div>
+                  <div className="model-dropdown-item loading">
+                    Loading models...
+                  </div>
                 )}
 
                 {/* 可用模型列表 */}
@@ -366,7 +464,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     .map((model) => (
                       <div
                         key={model}
-                        className='model-dropdown-item'
+                        className="model-dropdown-item"
                         onClick={() => handleRegenerate(model)}
                       >
                         {model}
@@ -374,9 +472,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     ))}
 
                 {/* 沒有模型時顯示提示 */}
-                {!loadingModels && !isLoadingModels && availableModels.length === 0 && (
-                  <div className='model-dropdown-item no-models'>No other models available</div>
-                )}
+                {!loadingModels &&
+                  !isLoadingModels &&
+                  availableModels.length === 0 && (
+                    <div className="model-dropdown-item no-models">
+                      No other models available
+                    </div>
+                  )}
               </div>
             )}
           </div>

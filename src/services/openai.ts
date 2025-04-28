@@ -1,5 +1,6 @@
 import { AzureOpenAI, OpenAI } from "openai";
 import { Message, ModelSetting } from "../types";
+import { Stream } from "openai/streaming";
 
 // Initialize the appropriate client based on api_type
 const createClient = (settings: ModelSetting) => {
@@ -67,17 +68,36 @@ export const chatCompletion = async (
   try {
     const client = createClient(settings);
 
-    const formattedMessages = messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+    // Format messages according to OpenAI API requirements
+    const formattedMessages = messages.map((m) => {
+      // For string contents, return simple object
+      if (typeof m.content === "string") {
+        return {
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+        };
+      } else {
+        // For array content with text and images, format according to OpenAI API
+        return {
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content.map((item) => {
+            if (item.type === "text") {
+              return { type: "text", text: item.text };
+            } else if (item.type === "image_url" && item.image_url) {
+              return { type: "image_url", image_url: item.image_url };
+            }
+            return item;
+          }),
+        };
+      }
+    });
 
-    console.log("Sending streaming request to:", settings.baseUrl);
+    console.log("Sending request to:", settings.baseUrl);
 
     // 基本請求配置
     const requestOptions = {
       model: settings.model,
-      messages: formattedMessages,
+      messages: formattedMessages as any, // Type assertion to bypass strict checking
       temperature: settings.temperature,
       max_tokens: settings.maxTokens,
     };
@@ -85,13 +105,34 @@ export const chatCompletion = async (
     // 檢查是否需要串流模式
     if (onToken) {
       console.log("Sending streaming request to:", settings.baseUrl);
-      const responses = await client.chat.completions.create({
+      
+      // Properly type the streaming response
+      type ChatCompletionChunk = {
+        id: string;
+        object: string;
+        created: number;
+        model: string;
+        choices: Array<{
+          index: number;
+          delta: {
+            content?: string;
+            role?: string;
+          };
+          finish_reason: string | null;
+        }>;
+      };
+      
+      // Create streaming request with proper typing
+      const streamingOptions = {
         ...requestOptions,
         stream: true,
-      });
+      };
+      
+      // Explicitly type the response as a Stream of ChatCompletionChunk
+      const stream = await client.chat.completions.create(streamingOptions) as unknown as Stream<ChatCompletionChunk>;
 
       let fullResponse = "";
-      for await (const chunk of responses) {
+      for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || "";
         if (content) {
           onToken(content);
@@ -101,7 +142,7 @@ export const chatCompletion = async (
       return fullResponse;
     } else {
       console.log("Sending request to:", settings.baseUrl);
-      const responses = await client.chat.completions.create(requestOptions);
+      const responses = await client.chat.completions.create(requestOptions as any);
       return responses.choices[0].message.content || "";
     }
   } catch (error) {

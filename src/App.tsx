@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
-import { Message, ModelSetting } from "./types";
+import { Message, ModelSetting, MessageContent } from "./types";
 import { chatCompletion, generateImageAndText, fetchModels } from "./services/openai";
 import { extractLongestCodeBlock, detectInProgressCodeBlock } from "./utils/markdownUtils";
 import { getDefaultModelSettings } from "./utils/modelUtils";
@@ -227,8 +227,11 @@ const App: React.FC = () => {
     const message = messages.find((m) => m.id === streamingMessageId);
     if (!message) return;
 
+    // Only process text content
+    const messageContent = typeof message.content === 'string' ? message.content : '';
+
     // Check for in-progress code blocks with 5+ lines
-    const { codeBlock, blockPosition, lineCount } = detectInProgressCodeBlock(message.content, 5);
+    const { codeBlock, blockPosition, lineCount } = detectInProgressCodeBlock(messageContent, 5);
 
     // If a code block with 5+ lines is found and we haven't already detected one or have a different one
     if (codeBlock && blockPosition && lineCount >= 5 && !codeBlockDetected) {
@@ -241,7 +244,7 @@ const App: React.FC = () => {
     }
 
     // If we have an active code block that's being updated
-    if (codeBlockDetected && editingMessageId === streamingMessageId && codeBlockPosition) {
+    if (codeBlockDetected && editingMessageId === streamingMessageId && codeBlockPosition && typeof message.content === 'string') {
       // Get the updated in-progress code block
       const updatedBlock = message.content.substring(codeBlockPosition.start);
       setMarkdownContent(updatedBlock);
@@ -377,7 +380,7 @@ const App: React.FC = () => {
     generateNewThreadId();
   };
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string | MessageContent[]) => {
     // If this is the first message of a conversation, ensure we have a thread ID
     if (messages.length === 0 && !threadId) {
       generateNewThreadId();
@@ -539,12 +542,10 @@ const App: React.FC = () => {
     }, 50);
   };
 
-  // Check if a message contains a code block and show the BlockNote editor
   const handleMarkdownDetected = (content: string, messageId: string) => {
     if (content.includes("```")) {
       // First check for in-progress code blocks
       const { codeBlock, blockPosition } = detectInProgressCodeBlock(content, 5);
-
       if (codeBlock && blockPosition) {
         // Use the in-progress code block
         setMarkdownContent(codeBlock);
@@ -565,7 +566,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Update the message with edited code block content
   const handleSaveMarkdown = (editedContent: string) => {
     setMessages((prev) => {
       const updatedMessages = [...prev];
@@ -573,15 +573,19 @@ const App: React.FC = () => {
 
       if (messageIndex !== -1 && codeBlockPosition) {
         const originalContent = updatedMessages[messageIndex].content;
-        const newContent =
-          originalContent.substring(0, codeBlockPosition.start) +
-          editedContent +
-          originalContent.substring(codeBlockPosition.end);
 
-        updatedMessages[messageIndex] = {
-          ...updatedMessages[messageIndex],
-          content: newContent,
-        };
+        // Only handle string content for now
+        if (typeof originalContent === "string") {
+          const newContent =
+            originalContent.substring(0, codeBlockPosition.start) +
+            editedContent +
+            originalContent.substring(codeBlockPosition.end);
+
+          updatedMessages[messageIndex] = {
+            ...updatedMessages[messageIndex],
+            content: newContent,
+          };
+        }
       }
 
       return updatedMessages;
@@ -590,7 +594,6 @@ const App: React.FC = () => {
     setMarkdownContent(editedContent);
   };
 
-  // Close the BlockNote editor
   const handleCloseMarkdownCanvas = () => {
     setIsMarkdownCanvasOpen(false);
     setEditingMessageId(null);
