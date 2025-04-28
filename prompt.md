@@ -17,7 +17,7 @@ LLM Chatbot Frontend UI
   - 會有一個 `ContextMenu` 彈出來
   - 當使用者點擊 `Ask GPT` 時會將選取的文字傳給 `ChatBox` 並且等待使用者輸入問題後送出
 - 當收到使用者訊息後 會透過 `chatCompletion` 來判斷任務內容
-  - `code`
+  - `canvas`
   - `image`
     - 生圖模式會透過 `generateImageAndText` 來產生圖片與對應的文字
     - 當圖片生成完畢後會同時與文字渲染到 `ChatBox`
@@ -41,9 +41,9 @@ LLM Chatbot Frontend UI
 
 ## TODO Features
 
-- `MarkdownCanvas` 內 不知道為何渲染時並沒有因為他是 python 或是 markdown 而變色 或是 高亮
+- 決定完任務內容後 `canvas` 的功能尚未完成
 
-- 決定完任務內容後 `code` 的功能尚未完成
+- `MarkdownCanvas` 內 不知道為何渲染時並沒有因為他是 python 或是 markdown 而變色 或是 高亮
 
 - 請幫我增加一個功能 當使用者用滑鼠把某段字反白時 希望可以跳出一個選項在反白的字下面
   - `Ask GPT`

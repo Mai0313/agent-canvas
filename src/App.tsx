@@ -410,7 +410,7 @@ const App: React.FC = () => {
           : content.find((item) => item.type === "text")?.text || "";
 
       // Only detect task type if we have text content
-      let taskType: "code" | "image" | "chat" = "chat"; // Default to chat
+      let taskType: "canvas" | "image" | "chat" = "chat"; // Default to chat
       if (messageText) {
         try {
           taskType = await detectTaskType(messageText, settings);
@@ -451,6 +451,8 @@ const App: React.FC = () => {
           }
           return updatedMessages;
         });
+      } else if (taskType === "canvas") {
+        // Handle canvas task (e.g., code generation)
       } else {
         // Handle normal chat or code tasks (code detection happens on response)
         await chatCompletion([...messages, userMessage], settings, (token) => {
