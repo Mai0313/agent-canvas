@@ -154,22 +154,6 @@ export const chatCompletion = async (
 };
 
 /**
- * @deprecated use chatCompletion instead
- */
-export const streamChatCompletion = async (
-  messages: Message[],
-  settings: ModelSetting,
-  onToken: (token: string) => void,
-): Promise<void> => {
-  try {
-    await chatCompletion(messages, settings, onToken);
-  } catch (error) {
-    console.error("Error streaming from AI API:", error);
-    throw error;
-  }
-};
-
-/**
  * Generate an image based on the prompt and also get a text response
  * @param prompt The prompt for image generation and text response
  * @param settings Model settings
