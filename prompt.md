@@ -11,6 +11,7 @@ LLM Chatbot Frontend UI
   - 右邊會彈出一個 `markdown editor` a.k.a `MarkdownCanvas`
   - 當第一個 "\`\`\`" 出現時開始計算行數, 當出現第五行時就自動把整個代碼框透過 `Streaming`
     的方式輸出到 `MarkdownCanvas` 內
+  - 當第二個 "\`\`\`" 出現時 就會停止渲染到 `MarkdownCanvas` 將後續內容輸出到 `ChatBox`
 - MarkdownCanvas 和 ChatBox 之間會有一個 `ResizeBox` 用於給使用者調整每一區塊的大小
 - 當使用者框選出一段文字後
   - 會有一個 `ContextMenu` 彈出來
