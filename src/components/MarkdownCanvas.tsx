@@ -6,13 +6,20 @@ import SelectionPopup from "./SelectionPopup";
 
 // Import BlockNote components and styles
 import "@blocknote/core/fonts/inter.css";
+import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
 import {
+  BasicTextStyleButton,
+  BlockTypeSelect,
+  ColorStyleButton,
+  CreateLinkButton,
+  FormattingToolbar,
+  FormattingToolbarController,
+  NestBlockButton,
+  TextAlignButton,
+  UnnestBlockButton,
   useCreateBlockNote,
-  getDefaultReactSlashMenuItems,
-  BlockNoteViewRaw,
-  SuggestionMenuController,
 } from "@blocknote/react";
-import "@blocknote/react/style.css";
 
 // 導入圖標
 import closeIcon from "../assets/icon/close-icon.svg";
@@ -376,9 +383,11 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       // Get current content as markdown before switching to raw view
       editor.blocksToMarkdownLossy(editor.document).then((markdown) => {
         let cleanContent = markdown;
-        // cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
-        // if (cleanContent.includes("\n```")) {
-        //   cleanContent = cleanContent.replace(/\n```\s*$/m, "");
+        // if (cleanContent.includes("markdown")) {
+        //   cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
+        //   if (cleanContent.includes("\n```")) {
+        //     cleanContent = cleanContent.replace(/\n```\s*$/m, "");
+        //   }
         // }
         setRawMarkdown(cleanContent);
         setIsRawView(true);
@@ -389,7 +398,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       // Update the editor with the raw markdown
       const updateFromRaw = async () => {
         try {
-          const markdownContent = `\`\`\`${codeLanguage}\n${rawMarkdown}\n\`\`\``;
+          const markdownContent = rawMarkdown;  // `\`\`\`${codeLanguage}\n${rawMarkdown}\n\`\`\``;
           const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
           editor.replaceBlocks(editor.document, blocks);
 
@@ -554,14 +563,58 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
           />
         ) : (
           <div className='blocknote-container' ref={previewRef} style={{ height: "100%" }}>
-            {/* Using BlockNoteViewRaw with proper configuration */}
-            <BlockNoteViewRaw editor={editor} theme='dark' editable={editMode}>
-              <SuggestionMenuController
-                triggerCharacter='/'
-                getItems={async () => getDefaultReactSlashMenuItems(editor)}
+            {/* Switch to BlockNoteView from Mantine with proper formatting toolbar */}
+            <BlockNoteView editor={editor} theme="dark" editable={editMode} formattingToolbar={false}>
+              <FormattingToolbarController
+                formattingToolbar={() => (
+                  <FormattingToolbar>
+                    <BlockTypeSelect key={"blockTypeSelect"} />
+                    
+                    <BasicTextStyleButton
+                      basicTextStyle={"bold"}
+                      key={"boldStyleButton"}
+                    />
+                    <BasicTextStyleButton
+                      basicTextStyle={"italic"}
+                      key={"italicStyleButton"}
+                    />
+                    <BasicTextStyleButton
+                      basicTextStyle={"underline"}
+                      key={"underlineStyleButton"}
+                    />
+                    <BasicTextStyleButton
+                      basicTextStyle={"strike"}
+                      key={"strikeStyleButton"}
+                    />
+                    <BasicTextStyleButton
+                      key={"codeStyleButton"}
+                      basicTextStyle={"code"}
+                    />
+                    
+                    <TextAlignButton
+                      textAlignment={"left"}
+                      key={"textAlignLeftButton"}
+                    />
+                    <TextAlignButton
+                      textAlignment={"center"}
+                      key={"textAlignCenterButton"}
+                    />
+                    <TextAlignButton
+                      textAlignment={"right"}
+                      key={"textAlignRightButton"}
+                    />
+                    
+                    <ColorStyleButton key={"colorStyleButton"} />
+                    
+                    <NestBlockButton key={"nestBlockButton"} />
+                    <UnnestBlockButton key={"unnestBlockButton"} />
+                    
+                    <CreateLinkButton key={"createLinkButton"} />
+                  </FormattingToolbar>
+                )}
               />
-            </BlockNoteViewRaw>
-
+            </BlockNoteView>
+            
             {showSelectionPopup && (
               <SelectionPopup
                 position={popupPosition}
