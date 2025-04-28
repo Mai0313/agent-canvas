@@ -60,7 +60,7 @@ const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChang
               </option>
             ))
           ) : (
-            <option value='gpt-4o'>GPT-4o</option>
+            <option value='gpt-4o'>gpt-4o</option>
           )}
         </select>
       </div>
