@@ -510,7 +510,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             {isGeneratingTitle ? "生成中..." : "AI 標題"}
           </button>
           <button onClick={toggleRawView} className='title-button' style={{ marginLeft: "8px" }}>
-            {isRawView ? "編輯器視圖" : "原始視圖"}
+            {isRawView ? "編輯" : "保存"}
           </button>
         </div>
         <div className='markdown-controls'>
