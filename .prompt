@@ -13,9 +13,7 @@ LLM Chatbot Frontend UI
     - 當使用者點擊 `Ask GPT` 時會將選取的文字傳給 `ChatBox` 並且等待使用者輸入問題後送出
 - 當使用者點擊 `Generate Image` 時會透過 `generateImageAndText` 來產生圖片與對應的文字
     - 當圖片生成完畢後會同時與文字渲染到 `ChatBox`
-
-## TODO Features
-- 請幫我將每一段 LLM 的回應下方新增幾個按鈕
+- 每一段 LLM 的回應下方新增幾個按鈕
     - `Copy`
         - 當使用者點擊這個按鈕時 會將該段回應的內容複製到剪貼簿
     - `Edit`
@@ -26,6 +24,8 @@ LLM Chatbot Frontend UI
     - `Regenerate`
         - 當使用者點擊這個按鈕時 會將該段對話刪除 並重新生成一次對話
         - 當使用者編輯完畢後 點擊 `Send` 按鈕會將編輯後的內容送出
+
+## TODO Features
 - 請幫我增加一個功能 當使用者用滑鼠把某段字反白時 希望可以跳出一個選項在反白的字下面
     - `Ask GPT`
         - 當使用者點擊這個選項時 將反白的字當成引用放進 Chatbox 並且等待使用者輸入問題後送出
