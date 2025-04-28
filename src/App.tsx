@@ -5,7 +5,7 @@ import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
 import { Message, ModelSetting } from "./types";
 import {
-  ChatCompletion,
+  chatCompletion,
   generateImageAndText,
   fetchModels,
 } from "./services/openai";
@@ -175,7 +175,7 @@ const App: React.FC = () => {
         ? { ...settings, model: modelName }
         : settings;
 
-      await ChatCompletion(contextMessages, settingsToUse, (token) => {
+      await chatCompletion(contextMessages, settingsToUse, (token) => {
         setMessages((prev) => {
           const updatedMsgs = [...prev];
           const msgIndex = updatedMsgs.findIndex(
@@ -452,7 +452,7 @@ const App: React.FC = () => {
       setMessages((prev) => [...prev, assistantMessage]);
       setStreamingMessageId(assistantMessageId);
 
-      await ChatCompletion([...messages, userMessage], settings, (token) => {
+      await chatCompletion([...messages, userMessage], settings, (token) => {
         setMessages((prev) => {
           const updatedMessages = [...prev];
           const messageIndex = updatedMessages.findIndex(

@@ -59,7 +59,7 @@ export const fetchModels = async (
   }
 };
 
-export const ChatCompletion = async (
+export const chatCompletion = async (
   messages: Message[],
   settings: ModelSetting,
   onToken?: (token: string) => void,
@@ -111,7 +111,7 @@ export const ChatCompletion = async (
 };
 
 /**
- * @deprecated use ChatCompletion instead
+ * @deprecated use chatCompletion instead
  */
 export const streamChatCompletion = async (
   messages: Message[],
@@ -119,7 +119,7 @@ export const streamChatCompletion = async (
   onToken: (token: string) => void,
 ): Promise<void> => {
   try {
-    await ChatCompletion(messages, settings, onToken);
+    await chatCompletion(messages, settings, onToken);
   } catch (error) {
     console.error("Error streaming from AI API:", error);
     throw error;
@@ -159,8 +159,8 @@ export const generateImageAndText = async (
         response_format: "b64_json",
       }),
 
-      // Text response (using existing ChatCompletion function)
-      ChatCompletion(
+      // Text response (using existing chatCompletion function)
+      chatCompletion(
         [
           {
             id: "system",

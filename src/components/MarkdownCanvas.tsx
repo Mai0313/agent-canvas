@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Message } from "../types";
 import { getDefaultModelSettings } from "../utils/modelUtils";
-import { ChatCompletion } from "../services/openai";
+import { chatCompletion } from "../services/openai";
 import SelectionPopup from "./SelectionPopup";
 
 // Import BlockNote components and styles
@@ -447,7 +447,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       ];
 
       let generatedTitle = "";
-      await ChatCompletion(messages, settings, (token) => {
+      await chatCompletion(messages, settings, (token) => {
         generatedTitle += token;
       });
 
