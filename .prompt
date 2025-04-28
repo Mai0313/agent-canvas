@@ -7,12 +7,14 @@ LLM Chatbot Frontend UI
 - 當使用者任務是寫代碼時
     - 右邊會彈出一個 `markdown editor` a.k.a `MarkdownCanvas`
     - 當第一個 "\`\`\`" 出現時開始計算行數, 當出現第五行時就自動把整個代碼框透過 `Streaming` 的方式輸出到 `MarkdownCanvas` 內
-- MarkdownCanvas和ChatBox之間會有一個 `ResizeBox` 用於給使用者調整每一區塊的大小
+- MarkdownCanvas 和 ChatBox 之間會有一個 `ResizeBox` 用於給使用者調整每一區塊的大小
 - 當使用者框選出一段文字後
     - 會有一個 `ContextMenu` 彈出來
     - 當使用者點擊 `Ask GPT` 時會將選取的文字傳給 `ChatBox` 並且等待使用者輸入問題後送出
-- 當使用者點擊 `Generate Image` 時會透過 `generateImageAndText` 來產生圖片與對應的文字
+- 使用者可以透過 `Image Mode` 和 `Chat Mode` 來切換聊天模式 或者 生圖模式
+    - 生圖模式會透過 `generateImageAndText` 來產生圖片與對應的文字
     - 當圖片生成完畢後會同時與文字渲染到 `ChatBox`
+    - 先透過 `generateImageAndText` 來產生圖片 圖片產生以後會將 `imageUrl` 放進 `chatCompletion` 來生成對應的圖片敘述
 - 每一段 LLM 的回應下方新增幾個按鈕
     - `Copy`
         - 當使用者點擊這個按鈕時 會將該段回應的內容複製到剪貼簿
@@ -27,9 +29,6 @@ LLM Chatbot Frontend UI
 - 使用者可以透過電腦的ctrl + v 來貼上圖片 貼上以後要送進chat completion
 
 ## TODO Features
-- 幫我把 generateImageAndText 這個功能的流程改寫一下 
-    - 正確的流程應該是 先透過 image generation 來產生圖片 圖片產生以後將 image_url 放進 chatCompletion 來生成對應的圖片敘述
-    - chatCompletion 可以支援訊息中帶圖片的功能
 - 請幫我增加一個功能 當使用者用滑鼠把某段字反白時 希望可以跳出一個選項在反白的字下面
     - `Ask GPT`
         - 當使用者點擊這個選項時 將反白的字當成引用放進 Chatbox 並且等待使用者輸入問題後送出
