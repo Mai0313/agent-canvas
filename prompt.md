@@ -42,27 +42,9 @@ LLM Chatbot Frontend UI
 
 - 目前有幾個問題
     - 決定完任務內容後 `code` 的功能尚未完成
-    - `chat` 模式下
+
 - 請幫我增加一個功能 當使用者用滑鼠把某段字反白時 希望可以跳出一個選項在反白的字下面
-
   - `Ask GPT`
-
-    - 當使用者點擊這個選項時 將反白的字當成引用放進 Chatbox 並且等待使用者輸入問題後送出
-
     - 當使用者點擊這個選項時 彈出一個臨時的小視窗 那個小視窗是一個小型的chatbox 將反白的字當成引用 並讓user輸入他想問的問題但當實際調用
       `chatCompletion` 的時候 需要將Chatbox的所有對話紀錄 和 反白的字 和 使用者輸入的問題一起送給
       `chatCompletion` 讓他生成一段回覆回覆的部分要用streaming的方式生成在臨時的Chatbox
-
-- 請幫我增加一個功能 在聊天框中新增一個可選的選項叫做 生成圖像 當生成圖像是被選取的狀態 要trigger兩件事情
-  - 將訊息透過下面這種方式來送出 以取得 base64 圖片
-    ```
-    client.images.generate({
-        prompt: "a cute cat",
-        n: 1,
-        model: "dall-e-3"
-        response_format: "b64_json"
-    })
-    ```
-  - 將訊息同時透過 chatCompletion 讓他生成短的回覆
-- 當兩件事情都做完以後 請將該圖片渲染到ChatBox中 讓ChatBox顯示該圖片
-- 這兩件事情可以正合成一個 function 並寫在 `src/services/openai.ts` 內
