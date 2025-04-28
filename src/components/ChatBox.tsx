@@ -9,7 +9,6 @@ interface ChatBoxProps {
   messages: Message[];
   settings: ModelSetting;
   onSendMessage: (content: string | MessageContent[]) => void;
-  onGenerateImage?: (content: string) => void; // New prop for image generation
   onMarkdownDetected: (content: string, messageId: string) => void;
   isLoading: boolean;
   streamingMessageId?: string | null;
@@ -30,7 +29,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   messages,
   settings,
   onSendMessage,
-  onGenerateImage,
   onMarkdownDetected,
   isLoading,
   streamingMessageId,
@@ -53,7 +51,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const [isComposing, setIsComposing] = useState(false);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
   const [prevMessagesLength, setPrevMessagesLength] = useState(0);
-  const [imageMode, setImageMode] = useState(false);
   const [pastedImages, setPastedImages] = useState<{ url: string; file: File }[]>([]);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -178,44 +175,39 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     e.preventDefault();
 
     if (inputValue.trim() || pastedImages.length > 0) {
-      if (imageMode && onGenerateImage && !pastedImages.length) {
-        // Use the image generation function if in image mode and no pasted images
-        onGenerateImage(inputValue.trim());
-      } else {
-        // Regular text message or text with images
-        let messageToSend: string | MessageContent[] = inputValue.trim();
+      // Regular text message or text with images
+      let messageToSend: string | MessageContent[] = inputValue.trim();
 
-        if (quotedText) {
-          messageToSend = `> ${quotedText}\n\n${messageToSend}`;
-        }
-
-        // If we have pasted images, format as a MessageContent array
-        if (pastedImages.length > 0) {
-          const contentArray: MessageContent[] = [];
-
-          // Add text content if any
-          if (messageToSend) {
-            contentArray.push({
-              type: "text",
-              text: messageToSend,
-            });
-          }
-
-          // Add all pasted images
-          pastedImages.forEach((image) => {
-            contentArray.push({
-              type: "image_url",
-              image_url: {
-                url: image.url,
-              },
-            });
-          });
-
-          messageToSend = contentArray;
-        }
-
-        onSendMessage(messageToSend);
+      if (quotedText) {
+        messageToSend = `> ${quotedText}\n\n${messageToSend}`;
       }
+
+      // If we have pasted images, format as a MessageContent array
+      if (pastedImages.length > 0) {
+        const contentArray: MessageContent[] = [];
+
+        // Add text content if any
+        if (messageToSend) {
+          contentArray.push({
+            type: "text",
+            text: messageToSend,
+          });
+        }
+
+        // Add all pasted images
+        pastedImages.forEach((image) => {
+          contentArray.push({
+            type: "image_url",
+            image_url: {
+              url: image.url,
+            },
+          });
+        });
+
+        messageToSend = contentArray;
+      }
+
+      onSendMessage(messageToSend);
 
       setInputValue("");
       setQuotedText(null);
@@ -223,10 +215,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       // 用戶發送消息後設置為自動滾動到底部
       setShouldScrollToBottom(true);
     }
-  };
-
-  const toggleImageMode = () => {
-    setImageMode(!imageMode);
   };
 
   // Handle text selection for Ask GPT feature
@@ -288,17 +276,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       </div>
 
       <form className='chat-input-form' onSubmit={handleSubmit}>
-        <div className='input-controls'>
-          <button
-            type='button'
-            className={`mode-button ${imageMode ? "active" : ""}`}
-            onClick={toggleImageMode}
-            disabled={isLoading}
-          >
-            {imageMode ? "🖼️ Image Mode" : "💭 Chat Mode"}
-          </button>
-        </div>
-
         {quotedText && (
           <div className='quoted-text-container'>
             <div className='quoted-text'>

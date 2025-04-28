@@ -1,6 +1,7 @@
 import { AzureOpenAI, OpenAI } from "openai";
 import { Message, ModelSetting, MessageContent } from "../types";
 import { Stream } from "openai/streaming";
+import { ChatCompletionMessageParam } from "openai/resources/chat";
 
 // Initialize the appropriate client based on api_type
 const createClient = (settings: ModelSetting) => {
@@ -150,6 +151,54 @@ export const chatCompletion = async (
   } catch (error) {
     console.error("Error:", error);
     throw error;
+  }
+};
+
+/**
+ * Detect the task type from user message
+ * @param message User message to analyze
+ * @param settings Model settings
+ * @returns Task type: "code", "image", or "chat"
+ */
+export const detectTaskType = async (
+  message: string,
+  settings: ModelSetting,
+): Promise<"code" | "image" | "chat"> => {
+  try {
+    const client = createClient(settings);
+    
+    // System message to instruct the AI
+    const systemMessage: ChatCompletionMessageParam = {
+      role: "system",
+      content: "Analyze the user's message and determine if they are requesting: 1) code writing, 2) image generation, or 3) general chat. Respond with ONLY one of these exact words: 'code', 'image', or 'chat'."
+    };
+    
+    // User message to analyze
+    const userMessage: ChatCompletionMessageParam = {
+      role: "user",
+      content: message
+    };
+    
+    // Create the request with low temperature for more deterministic results
+    const response = await client.chat.completions.create({
+      model: settings.model,
+      messages: [systemMessage, userMessage],
+      temperature: 0.1, // Low temperature for more deterministic response
+      max_tokens: 10, // We only need a short response
+    });
+    
+    // Extract and clean the response
+    const taskType = response.choices[0].message.content?.trim().toLowerCase() || "chat";
+    
+    // Ensure we only return one of our expected types
+    if (taskType === "code") return "code";
+    if (taskType === "image") return "image";
+    return "chat"; // Default to chat for any other response
+    
+  } catch (error) {
+    console.error("Error detecting task type:", error);
+    // Default to chat mode if there's an error
+    return "chat";
   }
 };
 

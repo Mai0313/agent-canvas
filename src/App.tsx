@@ -4,7 +4,7 @@ import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
 import { Message, ModelSetting, MessageContent } from "./types";
-import { chatCompletion, generateImageAndText, fetchModels } from "./services/openai";
+import { chatCompletion, generateImageAndText, fetchModels, detectTaskType } from "./services/openai";
 import { extractLongestCodeBlock, detectInProgressCodeBlock } from "./utils/markdownUtils";
 import { getDefaultModelSettings } from "./utils/modelUtils";
 import "./styles.css";
@@ -403,100 +403,76 @@ const App: React.FC = () => {
     setError(null);
 
     try {
+      // First determine the task type if content is a string
+      const messageText =
+        typeof content === "string"
+          ? content
+          : content.find((item) => item.type === "text")?.text || "";
+
+      // Only detect task type if we have text content
+      let taskType: "code" | "image" | "chat" = "chat"; // Default to chat
+      if (messageText) {
+        try {
+          taskType = await detectTaskType(messageText, settings);
+          console.log(`Detected task type: ${taskType}`);
+        } catch (err) {
+          console.error("Error in task detection:", err);
+          // Continue with default chat mode if detection fails
+        }
+      }
+
       const assistantMessageId = uuidv4();
       const assistantMessage: Message = {
         id: assistantMessageId,
         role: "assistant",
-        content: "",
+        content: taskType === "image" ? "Creating your Image..." : "",
         timestamp: new Date(),
+        isGeneratingImage: taskType === "image", // Mark as generating image if detected as image task
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
       setStreamingMessageId(assistantMessageId);
 
-      await chatCompletion([...messages, userMessage], settings, (token) => {
+      if (taskType === "image") {
+        // Handle image generation
+        const { imageUrl, textResponse } = await generateImageAndText(messageText, settings);
+
+        // Update message with image and description
         setMessages((prev) => {
           const updatedMessages = [...prev];
           const messageIndex = updatedMessages.findIndex((m) => m.id === assistantMessageId);
           if (messageIndex !== -1) {
             updatedMessages[messageIndex] = {
               ...updatedMessages[messageIndex],
-              content: updatedMessages[messageIndex].content + token,
+              content: textResponse,
+              imageUrl: imageUrl,
+              isGeneratingImage: false, // Remove generating status
             };
           }
           return updatedMessages;
         });
-      });
+      } else {
+        // Handle normal chat or code tasks (code detection happens on response)
+        await chatCompletion([...messages, userMessage], settings, (token) => {
+          setMessages((prev) => {
+            const updatedMessages = [...prev];
+            const messageIndex = updatedMessages.findIndex((m) => m.id === assistantMessageId);
+            if (messageIndex !== -1) {
+              updatedMessages[messageIndex] = {
+                ...updatedMessages[messageIndex],
+                content: updatedMessages[messageIndex].content + token,
+              };
+            }
+            return updatedMessages;
+          });
+        });
+      }
     } catch (err: any) {
       setError(
         err.message ||
           "Failed to get response from the AI. Please check your settings and try again.",
       );
       console.error("Chat completion error:", err);
-    } finally {
-      setIsLoading(false);
-      setStreamingMessageId(null);
-    }
-  };
-
-  // New function for handling image generation requests
-  const handleGenerateImage = async (prompt: string) => {
-    // If this is the first message of a conversation, ensure we have a thread ID
-    if (messages.length === 0 && !threadId) {
-      generateNewThreadId();
-    }
-
-    const userMessage: Message = {
-      id: uuidv4(),
-      role: "user",
-      content: `${prompt}`,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const assistantMessageId = uuidv4();
-      // 創建一個包含 loading 狀態的初始消息
-      const assistantMessage: Message = {
-        id: assistantMessageId,
-        role: "assistant",
-        content: "Creating your Image...",
-        timestamp: new Date(),
-        isGeneratingImage: true, // 標記正在生成圖片
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-      setStreamingMessageId(assistantMessageId);
-
-      // Call the generateImageAndText function
-      const { imageUrl, textResponse } = await generateImageAndText(
-        prompt,
-        settings,
-        undefined, // 使用 undefined 而不是 null，因為這是可選參數
-      );
-
-      // 生成完成後，更新消息，同時顯示文字和圖片
-      setMessages((prev) => {
-        const updatedMessages = [...prev];
-        const messageIndex = updatedMessages.findIndex((m) => m.id === assistantMessageId);
-        if (messageIndex !== -1) {
-          updatedMessages[messageIndex] = {
-            ...updatedMessages[messageIndex],
-            content: textResponse,
-            imageUrl: imageUrl,
-            isGeneratingImage: false, // 移除生成中狀態
-          };
-        }
-        return updatedMessages;
-      });
-    } catch (err: any) {
-      setError(
-        err.message || "Failed to generate image. Please check your settings and try again.",
-      );
-      console.error("Image generation error:", err);
     } finally {
       setIsLoading(false);
       setStreamingMessageId(null);
@@ -633,7 +609,6 @@ const App: React.FC = () => {
             messages={messages}
             settings={settings}
             onSendMessage={handleSendMessage}
-            onGenerateImage={handleGenerateImage}
             onMarkdownDetected={handleMarkdownDetected}
             isLoading={isLoading}
             streamingMessageId={streamingMessageId}
