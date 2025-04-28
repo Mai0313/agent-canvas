@@ -15,23 +15,6 @@ LLM Chatbot Frontend UI
     - 當圖片生成完畢後會同時與文字渲染到 `ChatBox`
 
 ## TODO Features
-- 請幫我把 `MarkdownCanvas` 改成 `BlockNote` 這個套件 那個套件的樣式比較好看
-    - 目前已經有一個初步版本 但當我點編輯時 會出現這個問題
-    ```
-    ERROR
-    Cannot read properties of undefined (reading 'SideMenu')
-    TypeError: Cannot read properties of undefined (reading 'SideMenu')
-        at pr (http://localhost:3000/static/js/bundle.js:3266:84)
-        at react-stack-bottom-frame (http://localhost:3000/static/js/bundle.js:85744:18)
-        at renderWithHooks (http://localhost:3000/static/js/bundle.js:75954:20)
-        at updateFunctionComponent (http://localhost:3000/static/js/bundle.js:77647:17)
-        at beginWork (http://localhost:3000/static/js/bundle.js:78233:16)
-        at runWithFiberInDEV (http://localhost:3000/static/js/bundle.js:73726:68)
-        at performUnitOfWork (http://localhost:3000/static/js/bundle.js:80306:93)
-        at workLoopSync (http://localhost:3000/static/js/bundle.js:80199:38)
-        at renderRootSync (http://localhost:3000/static/js/bundle.js:80183:7)
-        at performWorkOnRoot (http://localhost:3000/static/js/bundle.js:79947:42)
-    ```
 - 請幫我將每一段 LLM 的回應下方新增幾個按鈕
     - `Copy`
         - 當使用者點擊這個按鈕時 會將該段回應的內容複製到剪貼簿
