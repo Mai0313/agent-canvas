@@ -55,12 +55,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
   // 當模型下拉選單打開時，獲取可用模型
   useEffect(() => {
-    if (
-      showModelDropdown &&
-      fetchModels &&
-      !availableModels.length &&
-      !loadingModels
-    ) {
+    if (showModelDropdown && fetchModels && !availableModels.length && !loadingModels) {
       setLoadingModels(true);
       fetchModels()
         .then((models) => {
@@ -93,10 +88,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   // 處理點擊外部關閉下拉選單
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowModelDropdown(false);
       }
     };
@@ -113,11 +105,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
     const selection = window.getSelection();
     // If there's a selection and it's not empty
-    if (
-      selection &&
-      !selection.isCollapsed &&
-      selection.toString().trim() !== ""
-    ) {
+    if (selection && !selection.isCollapsed && selection.toString().trim() !== "") {
       const selectedContent = selection.toString();
       setSelectedText(selectedContent);
       // Calculate position for the popup
@@ -136,10 +124,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   // Close popup when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        messageRef.current &&
-        !messageRef.current.contains(event.target as Node)
-      ) {
+      if (messageRef.current && !messageRef.current.contains(event.target as Node)) {
         setShowSelectionPopup(false);
       }
     };
@@ -253,10 +238,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     // If this message has a code block that's currently being displayed in the canvas
     if (hasCodeBlock && isEditing && longestCodeBlockPosition) {
       // Create message parts: before the code block, a placeholder, and after the code block
-      const beforeCode = message.content.substring(
-        0,
-        longestCodeBlockPosition.start,
-      );
+      const beforeCode = message.content.substring(0, longestCodeBlockPosition.start);
       const afterCode = message.content.substring(longestCodeBlockPosition.end);
 
       // Create an array of elements
@@ -284,9 +266,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     }
 
     // Regular content display (no code blocks or not currently editing)
-    return message.content
-      .split("\n")
-      .map((line, i) => <div key={i}>{line || <br />}</div>);
+    return message.content.split("\n").map((line, i) => <div key={i}>{line || <br />}</div>);
   };
 
   // Handle "Ask GPT" button click
@@ -306,9 +286,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
       onMouseUp={handleMouseUp}
     >
       <div className='message-header'>
-        <span className='role'>
-          {message.role === "assistant" ? "AI" : "You"}
-        </span>
+        <span className='role'>{message.role === "assistant" ? "AI" : "You"}</span>
         <span className='timestamp'>
           {message.timestamp.toLocaleTimeString()}
           {isStreaming && !message.isGeneratingImage && (
@@ -319,18 +297,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
       <div className='message-content'>
         {processMessageContent()}
-        {isStreaming &&
-          message.content === "" &&
-          !message.isGeneratingImage && (
-            <div className='typing-indicator'>...</div>
-          )}
+        {isStreaming && message.content === "" && !message.isGeneratingImage && (
+          <div className='typing-indicator'>...</div>
+        )}
         {message.imageUrl && (
           <div className='message-image-container'>
-            <img
-              src={message.imageUrl}
-              alt='AI generated content'
-              className='message-image'
-            />
+            <img src={message.imageUrl} alt='AI generated content' className='message-image' />
           </div>
         )}
       </div>
@@ -347,11 +319,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
             {copySuccess ? "Copied" : "Copy"}
           </button>
 
-          <button
-            onClick={handleEdit}
-            className='action-button with-icon'
-            title='Edit message'
-          >
+          <button onClick={handleEdit} className='action-button with-icon' title='Edit message'>
             <img src={editCodeIcon} alt='Edit' className='icon-action' />
             Edit
           </button>
@@ -371,11 +339,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
               className='action-button with-icon regenerate-button'
               title='Regenerate response'
             >
-              <img
-                src={regenerateIcon}
-                alt='Regenerate'
-                className='icon-action'
-              />
+              <img src={regenerateIcon} alt='Regenerate' className='icon-action' />
               Regenerate {showModelDropdown ? "▲" : "▼"}
             </button>
 
@@ -384,18 +348,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 <div className='model-dropdown-header'>Choose model:</div>
 
                 {/* 當前模型選項 */}
-                <div
-                  className='model-dropdown-item'
-                  onClick={() => handleRegenerate()}
-                >
+                <div className='model-dropdown-item' onClick={() => handleRegenerate()}>
                   Current ({currentModel || "default"})
                 </div>
 
                 {/* 載入提示 */}
                 {(loadingModels || isLoadingModels) && (
-                  <div className='model-dropdown-item loading'>
-                    Loading models...
-                  </div>
+                  <div className='model-dropdown-item loading'>Loading models...</div>
                 )}
 
                 {/* 可用模型列表 */}
@@ -415,13 +374,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     ))}
 
                 {/* 沒有模型時顯示提示 */}
-                {!loadingModels &&
-                  !isLoadingModels &&
-                  availableModels.length === 0 && (
-                    <div className='model-dropdown-item no-models'>
-                      No other models available
-                    </div>
-                  )}
+                {!loadingModels && !isLoadingModels && availableModels.length === 0 && (
+                  <div className='model-dropdown-item no-models'>No other models available</div>
+                )}
               </div>
             )}
           </div>

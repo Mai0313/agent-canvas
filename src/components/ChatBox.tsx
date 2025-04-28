@@ -61,10 +61,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     if (!container) return true;
 
     const threshold = 100; // 像素閾值
-    return (
-      container.scrollHeight - container.scrollTop - container.clientHeight <
-      threshold
-    );
+    return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
   };
 
   // 監聽滾動事件，判斷是否應該自動滾動
@@ -97,23 +94,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     setPrevMessagesLength(messages.length);
 
     // 檢查最新的助手消息是否包含 markdown
-    const lastAssistantMessage = [...messages]
-      .reverse()
-      .find((m) => m.role === "assistant");
+    const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
 
-    if (
-      lastAssistantMessage &&
-      containsMarkdown(lastAssistantMessage.content)
-    ) {
+    if (lastAssistantMessage && containsMarkdown(lastAssistantMessage.content)) {
       onMarkdownDetected(lastAssistantMessage.content, lastAssistantMessage.id);
     }
-  }, [
-    messages,
-    onMarkdownDetected,
-    streamingMessageId,
-    prevMessagesLength,
-    shouldScrollToBottom,
-  ]);
+  }, [messages, onMarkdownDetected, streamingMessageId, prevMessagesLength, shouldScrollToBottom]);
 
   // 新增：監聽自定義事件，從 MarkdownCanvas 獲取選中的文字
   useEffect(() => {
@@ -125,17 +111,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     };
 
     // 註冊全局事件監聽器
-    document.addEventListener(
-      "setQuotedText",
-      handleSetQuotedText as EventListener,
-    );
+    document.addEventListener("setQuotedText", handleSetQuotedText as EventListener);
 
     // 組件卸載時移除事件監聽器
     return () => {
-      document.removeEventListener(
-        "setQuotedText",
-        handleSetQuotedText as EventListener,
-      );
+      document.removeEventListener("setQuotedText", handleSetQuotedText as EventListener);
     };
   }, []);
 
@@ -175,9 +155,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const handleAskGpt = (selectedText: string) => {
     setQuotedText(selectedText);
     // Focus the input field after setting the quoted text
-    const textarea = document.querySelector(
-      ".chat-input-form textarea",
-    ) as HTMLTextAreaElement;
+    const textarea = document.querySelector(".chat-input-form textarea") as HTMLTextAreaElement;
     if (textarea) {
       textarea.focus();
     }
@@ -204,13 +182,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               isStreaming={streamingMessageId === message.id}
               isEditing={editingMessageId === message.id}
               longestCodeBlockPosition={
-                message.id === editingMessageId
-                  ? longestCodeBlockPosition
-                  : null
+                message.id === editingMessageId ? longestCodeBlockPosition : null
               }
-              toggleMarkdownCanvas={() =>
-                toggleMarkdownCanvas(message.id, message.content)
-              }
+              toggleMarkdownCanvas={() => toggleMarkdownCanvas(message.id, message.content)}
               onAskGpt={handleAskGpt}
               // 傳遞新的消息操作功能
               onCopy={onCopy}
@@ -244,14 +218,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             <div className='quoted-text'>
               <div className='quote-marker'></div>
               <div className='quote-content'>
-                {quotedText.length > 100
-                  ? quotedText.substring(0, 100) + "..."
-                  : quotedText}
+                {quotedText.length > 100 ? quotedText.substring(0, 100) + "..." : quotedText}
               </div>
-              <button
-                className='quote-remove-button'
-                onClick={removeQuotedText}
-              >
+              <button className='quote-remove-button' onClick={removeQuotedText}>
                 ✕
               </button>
             </div>
@@ -262,11 +231,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={
-              quotedText
-                ? "Ask about the selected text..."
-                : "Type your message..."
-            }
+            placeholder={quotedText ? "Ask about the selected text..." : "Type your message..."}
             rows={3}
             onKeyDown={(e) => {
               // Only handle Enter key when not in IME composition

@@ -4,23 +4,14 @@ import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
 import { Message, ModelSetting } from "./types";
-import {
-  chatCompletion,
-  generateImageAndText,
-  fetchModels,
-} from "./services/openai";
-import {
-  extractLongestCodeBlock,
-  detectInProgressCodeBlock,
-} from "./utils/markdownUtils";
+import { chatCompletion, generateImageAndText, fetchModels } from "./services/openai";
+import { extractLongestCodeBlock, detectInProgressCodeBlock } from "./utils/markdownUtils";
 import { getDefaultModelSettings } from "./utils/modelUtils";
 import "./styles.css";
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [settings, setSettings] = useState<ModelSetting>(
-    getDefaultModelSettings(),
-  );
+  const [settings, setSettings] = useState<ModelSetting>(getDefaultModelSettings());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string>(uuidv4());
@@ -29,9 +20,7 @@ const App: React.FC = () => {
   const [markdownContent, setMarkdownContent] = useState<string>("");
   const [isMarkdownCanvasOpen, setIsMarkdownCanvasOpen] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
-    null,
-  );
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
 
   // State to track code block position
   const [codeBlockPosition, setCodeBlockPosition] = useState<{
@@ -121,20 +110,14 @@ const App: React.FC = () => {
   };
 
   // 處理消息重新生成
-  const handleRegenerateMessage = async (
-    messageId: string,
-    modelName?: string,
-  ) => {
+  const handleRegenerateMessage = async (messageId: string, modelName?: string) => {
     // 找到當前消息及其索引
     const messageIndex = messages.findIndex((m) => m.id === messageId);
     if (messageIndex === -1) return;
 
     // 找到該助手消息之前的用戶消息
     let userMessageIndex = messageIndex - 1;
-    while (
-      userMessageIndex >= 0 &&
-      messages[userMessageIndex].role !== "user"
-    ) {
+    while (userMessageIndex >= 0 && messages[userMessageIndex].role !== "user") {
       userMessageIndex--;
     }
 
@@ -171,16 +154,12 @@ const App: React.FC = () => {
       const contextMessages = messages.slice(0, userMessageIndex + 1);
 
       // 如果指定了模型，則使用該模型
-      const settingsToUse = modelName
-        ? { ...settings, model: modelName }
-        : settings;
+      const settingsToUse = modelName ? { ...settings, model: modelName } : settings;
 
       await chatCompletion(contextMessages, settingsToUse, (token) => {
         setMessages((prev) => {
           const updatedMsgs = [...prev];
-          const msgIndex = updatedMsgs.findIndex(
-            (m) => m.id === assistantMessageId,
-          );
+          const msgIndex = updatedMsgs.findIndex((m) => m.id === assistantMessageId);
 
           if (msgIndex !== -1) {
             updatedMsgs[msgIndex] = {
@@ -208,13 +187,7 @@ const App: React.FC = () => {
   const getAvailableModels = async () => {
     if (!settings.apiKey || !settings.baseUrl) {
       // 如果沒有設置 API 密鑰或基礎 URL，則返回預設模型列表
-      return [
-        "gpt-4",
-        "gpt-4-turbo",
-        "gpt-3.5-turbo",
-        "claude-instant-v1",
-        "claude-v2",
-      ];
+      return ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "claude-instant-v1", "claude-v2"];
     }
 
     setIsLoadingModels(true);
@@ -255,10 +228,7 @@ const App: React.FC = () => {
     if (!message) return;
 
     // Check for in-progress code blocks with 5+ lines
-    const { codeBlock, blockPosition, lineCount } = detectInProgressCodeBlock(
-      message.content,
-      5,
-    );
+    const { codeBlock, blockPosition, lineCount } = detectInProgressCodeBlock(message.content, 5);
 
     // If a code block with 5+ lines is found and we haven't already detected one or have a different one
     if (codeBlock && blockPosition && lineCount >= 5 && !codeBlockDetected) {
@@ -271,11 +241,7 @@ const App: React.FC = () => {
     }
 
     // If we have an active code block that's being updated
-    if (
-      codeBlockDetected &&
-      editingMessageId === streamingMessageId &&
-      codeBlockPosition
-    ) {
+    if (codeBlockDetected && editingMessageId === streamingMessageId && codeBlockPosition) {
       // Get the updated in-progress code block
       const updatedBlock = message.content.substring(codeBlockPosition.start);
       setMarkdownContent(updatedBlock);
@@ -284,13 +250,7 @@ const App: React.FC = () => {
         end: message.content.length,
       });
     }
-  }, [
-    messages,
-    streamingMessageId,
-    codeBlockDetected,
-    editingMessageId,
-    codeBlockPosition,
-  ]);
+  }, [messages, streamingMessageId, codeBlockDetected, editingMessageId, codeBlockPosition]);
 
   // Reset code block detection when streaming ends
   useEffect(() => {
@@ -348,12 +308,7 @@ const App: React.FC = () => {
         const markdownContainer = markdownContainerRef.current;
         const chatContainer = chatContainerRef.current;
 
-        if (
-          containerWidth &&
-          markdownContainer &&
-          chatContainer &&
-          mainContainerRef.current
-        ) {
+        if (containerWidth && markdownContainer && chatContainer && mainContainerRef.current) {
           // Calculate the new width based on mouse position
           const mainRect = mainContainerRef.current.getBoundingClientRect();
           const fromRight = mainRect.right - e.clientX;
@@ -386,8 +341,7 @@ const App: React.FC = () => {
   // Memoize generateNewThreadId to avoid dependency issues
   const generateNewThreadId = useCallback(() => {
     // Generate UUID and remove all hyphens, then take substring
-    const newThreadId =
-      "thread_dvc_" + uuidv4().replace(/-/g, "").substring(0, 16);
+    const newThreadId = "thread_dvc_" + uuidv4().replace(/-/g, "").substring(0, 16);
     setThreadId(newThreadId);
 
     // Update URL with the new thread ID without page reload
@@ -455,9 +409,7 @@ const App: React.FC = () => {
       await chatCompletion([...messages, userMessage], settings, (token) => {
         setMessages((prev) => {
           const updatedMessages = [...prev];
-          const messageIndex = updatedMessages.findIndex(
-            (m) => m.id === assistantMessageId,
-          );
+          const messageIndex = updatedMessages.findIndex((m) => m.id === assistantMessageId);
           if (messageIndex !== -1) {
             updatedMessages[messageIndex] = {
               ...updatedMessages[messageIndex],
@@ -521,9 +473,7 @@ const App: React.FC = () => {
       // 生成完成後，更新消息，同時顯示文字和圖片
       setMessages((prev) => {
         const updatedMessages = [...prev];
-        const messageIndex = updatedMessages.findIndex(
-          (m) => m.id === assistantMessageId,
-        );
+        const messageIndex = updatedMessages.findIndex((m) => m.id === assistantMessageId);
         if (messageIndex !== -1) {
           updatedMessages[messageIndex] = {
             ...updatedMessages[messageIndex],
@@ -536,8 +486,7 @@ const App: React.FC = () => {
       });
     } catch (err: any) {
       setError(
-        err.message ||
-          "Failed to generate image. Please check your settings and try again.",
+        err.message || "Failed to generate image. Please check your settings and try again.",
       );
       console.error("Image generation error:", err);
     } finally {
@@ -561,8 +510,7 @@ const App: React.FC = () => {
         openMarkdownCanvas(messageId, inProgressBlock, inProgressPosition);
       } else {
         // Fall back to completed code block
-        const { longestBlock, blockPosition } =
-          extractLongestCodeBlock(content);
+        const { longestBlock, blockPosition } = extractLongestCodeBlock(content);
         if (longestBlock && blockPosition) {
           openMarkdownCanvas(messageId, longestBlock, blockPosition);
         }
@@ -595,10 +543,7 @@ const App: React.FC = () => {
   const handleMarkdownDetected = (content: string, messageId: string) => {
     if (content.includes("```")) {
       // First check for in-progress code blocks
-      const { codeBlock, blockPosition } = detectInProgressCodeBlock(
-        content,
-        5,
-      );
+      const { codeBlock, blockPosition } = detectInProgressCodeBlock(content, 5);
 
       if (codeBlock && blockPosition) {
         // Use the in-progress code block
@@ -624,9 +569,7 @@ const App: React.FC = () => {
   const handleSaveMarkdown = (editedContent: string) => {
     setMessages((prev) => {
       const updatedMessages = [...prev];
-      const messageIndex = updatedMessages.findIndex(
-        (m) => m.id === editingMessageId,
-      );
+      const messageIndex = updatedMessages.findIndex((m) => m.id === editingMessageId);
 
       if (messageIndex !== -1 && codeBlockPosition) {
         const originalContent = updatedMessages[messageIndex].content;
@@ -657,11 +600,7 @@ const App: React.FC = () => {
   return (
     <div className='app' ref={appContainerRef}>
       {/* Sidebar with resizer */}
-      <div
-        className='sidebar'
-        ref={sidebarRef}
-        style={{ width: `${sidebarWidth}px` }}
-      >
+      <div className='sidebar' ref={sidebarRef} style={{ width: `${sidebarWidth}px` }}>
         <div className='thread-controls'>
           <button className='new-thread-btn' onClick={startNewThread}>
             New Conversation

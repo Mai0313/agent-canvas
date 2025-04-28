@@ -6,11 +6,7 @@ interface SelectionPopupProps {
   onAskGpt: (text: string) => void;
 }
 
-const SelectionPopup: React.FC<SelectionPopupProps> = ({
-  position,
-  selectedText,
-  onAskGpt,
-}) => {
+const SelectionPopup: React.FC<SelectionPopupProps> = ({ position, selectedText, onAskGpt }) => {
   return (
     <div
       className='selection-popup'

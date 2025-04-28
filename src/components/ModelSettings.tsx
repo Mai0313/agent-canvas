@@ -7,16 +7,11 @@ interface ModelSettingsProps {
   onSettingsChange: (settings: ModelSetting) => void;
 }
 
-const ModelSettings: React.FC<ModelSettingsProps> = ({
-  settings,
-  onSettingsChange,
-}) => {
+const ModelSettings: React.FC<ModelSettingsProps> = ({ settings, onSettingsChange }) => {
   const [models, setModels] = useState<Array<{ id: string }>>([]);
   const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     onSettingsChange({
       ...settings,

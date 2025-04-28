@@ -28,10 +28,7 @@ process.env.HOST = host;
 console.log(`Starting development server on ${host}:${port}`);
 
 // Start React development server with hot reloading
-const reactScriptsPath = path.resolve(
-  __dirname,
-  "../node_modules/.bin/react-scripts",
-);
+const reactScriptsPath = path.resolve(__dirname, "../node_modules/.bin/react-scripts");
 
 const childProcess = spawn(reactScriptsPath, ["start"], {
   stdio: "inherit",

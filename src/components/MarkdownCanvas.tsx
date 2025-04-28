@@ -198,11 +198,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 
       const selection = window.getSelection();
       // Check if there's a text selection
-      if (
-        selection &&
-        !selection.isCollapsed &&
-        selection.toString().trim() !== ""
-      ) {
+      if (selection && !selection.isCollapsed && selection.toString().trim() !== "") {
         const selectedContent = selection.toString();
         setSelectedText(selectedContent);
 
@@ -252,10 +248,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   // Close popup when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        previewRef.current &&
-        !previewRef.current.contains(event.target as Node)
-      ) {
+      if (previewRef.current && !previewRef.current.contains(event.target as Node)) {
         setShowSelectionPopup(false);
       }
     };
@@ -315,9 +308,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     setEditMode(false);
 
     // 檢查儲存的內容是否有完整的代碼塊（開始和結束標記）
-    const hasEndingMarker = hasEndingBackticks(
-      `\`\`\`${codeLanguage}\n${contentToSave}\n\`\`\``,
-    );
+    const hasEndingMarker = hasEndingBackticks(`\`\`\`${codeLanguage}\n${contentToSave}\n\`\`\``);
     setShouldGenerateTitle(hasEndingMarker);
     setHasClosingBackticks(hasEndingMarker);
   };
@@ -330,9 +321,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     // Reset editor content to original
     const importOriginalMarkdown = async () => {
       try {
-        const cleanContent = content
-          .replace(/^```[\w-]*\s*\n/m, "")
-          .replace(/\n```\s*$/m, "");
+        const cleanContent = content.replace(/^```[\w-]*\s*\n/m, "").replace(/\n```\s*$/m, "");
         const markdownContent = `\`\`\`${codeLanguage}\n${cleanContent}\n\`\`\``;
         const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
         editor.replaceBlocks(editor.document, blocks);
@@ -345,9 +334,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   };
 
   // Handle raw markdown changes in textarea
-  const handleRawMarkdownChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
+  const handleRawMarkdownChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setRawMarkdown(newContent);
 
@@ -434,8 +421,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
         {
           id: "system-msg",
           role: "system",
-          content:
-            "You are an assistant that helps name code snippets concisely.",
+          content: "You are an assistant that helps name code snippets concisely.",
           timestamp: new Date(),
         },
         {
@@ -510,34 +496,20 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     <div className='markdown-canvas' ref={canvasRef}>
       <div className='markdown-header'>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <button
-            onClick={handleClose}
-            title='Close editor'
-            className='close-button'
-          >
+          <button onClick={handleClose} title='Close editor' className='close-button'>
             <img src={closeIcon} alt='Close' width='24' height='24' />
           </button>
           <h3>{title}</h3>
-          <div className='language-badge'>
-            {codeLanguage !== "plaintext" && codeLanguage}
-          </div>
+          <div className='language-badge'>{codeLanguage !== "plaintext" && codeLanguage}</div>
           <button
             onClick={handleManualGenerateTitle}
             disabled={isGeneratingTitle || !hasClosingBackticks}
             className='title-button'
-            title={
-              !hasClosingBackticks
-                ? "需要完整的代碼塊（有結束標記```）才能生成標題"
-                : ""
-            }
+            title={!hasClosingBackticks ? "需要完整的代碼塊（有結束標記```）才能生成標題" : ""}
           >
             {isGeneratingTitle ? "生成中..." : "AI 標題"}
           </button>
-          <button
-            onClick={toggleRawView}
-            className='title-button'
-            style={{ marginLeft: "8px" }}
-          >
+          <button onClick={toggleRawView} className='title-button' style={{ marginLeft: "8px" }}>
             {isRawView ? "編輯器視圖" : "原始視圖"}
           </button>
         </div>
@@ -550,11 +522,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             <img src={copyCodeIcon} alt='Copy' width='24' height='24' />
           </button>
           {!editMode ? (
-            <button
-              onClick={handleEdit}
-              className='icon-button'
-              title='編輯代碼'
-            >
+            <button onClick={handleEdit} className='icon-button' title='編輯代碼'>
               <img src={editCodeIcon} alt='Edit' width='24' height='24' />
             </button>
           ) : (
@@ -582,11 +550,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             wrap='off'
           />
         ) : (
-          <div
-            className='blocknote-container'
-            ref={previewRef}
-            style={{ height: "100%" }}
-          >
+          <div className='blocknote-container' ref={previewRef} style={{ height: "100%" }}>
             {/* Using BlockNoteViewRaw with proper configuration */}
             <BlockNoteViewRaw editor={editor} theme='dark' editable={editMode}>
               <SuggestionMenuController
