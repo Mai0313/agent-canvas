@@ -4,7 +4,7 @@ import ChatBox from "./components/ChatBox";
 import ModelSettings from "./components/ModelSettings";
 import MarkdownCanvas from "./components/MarkdownCanvas";
 import { Message, ModelSetting } from "./types";
-import { ChatCompletion, generateImageAndText } from "./services/openai";
+import { ChatCompletion, generateImageAndText, fetchModels } from "./services/openai";
 import {
   extractLongestCodeBlock,
   detectInProgressCodeBlock,
@@ -117,7 +117,7 @@ const App: React.FC = () => {
   };
 
   // 處理消息重新生成
-  const handleRegenerateMessage = async (messageId: string) => {
+  const handleRegenerateMessage = async (messageId: string, modelName?: string) => {
     // 找到當前消息及其索引
     const messageIndex = messages.findIndex((m) => m.id === messageId);
     if (messageIndex === -1) return;
@@ -133,6 +133,7 @@ const App: React.FC = () => {
       return;
     }
     
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const userMessage = messages[userMessageIndex];
     
     // 刪除當前的助手消息
@@ -159,7 +160,12 @@ const App: React.FC = () => {
       // 收集上下文消息，直到並包括用戶消息
       const contextMessages = messages.slice(0, userMessageIndex + 1);
       
-      await ChatCompletion(contextMessages, settings, (token) => {
+      // 如果指定了模型，則使用該模型
+      const settingsToUse = modelName 
+        ? { ...settings, model: modelName } 
+        : settings;
+      
+      await ChatCompletion(contextMessages, settingsToUse, (token) => {
         setMessages((prev) => {
           const updatedMsgs = [...prev];
           const msgIndex = updatedMsgs.findIndex((m) => m.id === assistantMessageId);
@@ -184,6 +190,52 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
       setStreamingMessageId(null);
+    }
+  };
+
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
+
+  // 從 API 獲取可用模型
+  const getAvailableModels = async () => {
+    if (!settings.apiKey || !settings.baseUrl) {
+      // 如果沒有設置 API 密鑰或基礎 URL，則返回預設模型列表
+      return [
+        "gpt-4",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo",
+        "claude-instant-v1",
+        "claude-v2"
+      ];
+    }
+    
+    setIsLoadingModels(true);
+    try {
+      const models = await fetchModels(settings, {
+        onStart: () => setIsLoadingModels(true),
+        onSuccess: (data) => {
+          const modelIds = data.map(model => model.id);
+          setAvailableModels(modelIds);
+        },
+        onError: (error) => {
+          console.error("Failed to fetch models:", error);
+          // 失敗時使用預設模型列表
+          setAvailableModels([
+            "gpt-4",
+            "gpt-4-turbo",
+            "gpt-3.5-turbo",
+            "claude-instant-v1",
+            "claude-v2"
+          ]);
+        },
+        onComplete: () => setIsLoadingModels(false),
+      });
+      
+      return models ? models.map(model => model.id) : availableModels;
+    } catch (error) {
+      console.error("Error fetching models:", error);
+      setIsLoadingModels(false);
+      return availableModels;
     }
   };
 
@@ -637,6 +689,9 @@ const App: React.FC = () => {
             onEdit={handleEditMessage}
             onDelete={handleDeleteMessage}
             onRegenerate={handleRegenerateMessage}
+            fetchModels={getAvailableModels}
+            currentModel={settings.model}
+            isLoadingModels={isLoadingModels}
           />
 
           {isLoading && (

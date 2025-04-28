@@ -20,7 +20,10 @@ interface ChatBoxProps {
   onCopy?: (content: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
   onDelete?: (messageId: string) => void;
-  onRegenerate?: (messageId: string) => void;
+  onRegenerate?: (messageId: string, modelName?: string) => void;
+  fetchModels?: () => Promise<string[]>; // 動態獲取可用模型的函數
+  currentModel?: string; // 當前使用的模型
+  isLoadingModels?: boolean; // 是否正在載入模型
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -39,6 +42,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   onEdit,
   onDelete,
   onRegenerate,
+  fetchModels,
+  currentModel,
+  isLoadingModels,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [quotedText, setQuotedText] = useState<string | null>(null);
@@ -211,6 +217,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               onEdit={onEdit}
               onDelete={onDelete}
               onRegenerate={onRegenerate}
+              // 傳遞模型相關數據
+              fetchModels={fetchModels}
+              currentModel={currentModel}
+              isLoadingModels={isLoadingModels}
             />
           ))
         )}
