@@ -50,34 +50,23 @@ LLM Chatbot Frontend UI
 ## TODO Features
 
 - 幫我把這段功能
+
 ```
           <button onClick={toggleRawView} className='title-button' style={{ marginLeft: "8px" }}>
             {isRawView ? "編輯器視圖" : "原始視圖"}
           </button>
 ```
+
 這段功能有一個不錯的地方 就是當我點 原始視圖的時候 `MarkdownCanvas` 會變成可被編輯的狀態
-  - 但這個功能目前是獨立的 我希望可以將這個功能整合進去 `Edit` 和 `保存` 的按鈕裡面
-  - 當使用者點擊 `Edit` 按鈕時 `MarkdownCanvas` 會變成可被編輯的狀態 也就是 `原始視圖` 的狀態
-  - 當使用者點擊 `保存` 按鈕時 `MarkdownCanvas` 會變成不可被編輯的狀態 也就是 `編輯器視圖` 的狀態
-  - 當使用者有透過編輯 編輯過 `MarkdownCanvas` 的內容時
-    - 當使用者點擊 `保存` 按鈕時 會將編輯後的內容透過引用的方式 等待使用者填入問題 最後送進 `chatCompletion` 並且將編輯後的內容渲染到 `MarkdownCanvas` 內
-    - 當使用者點擊 `Cancel` 按鈕時 會將編輯後的內容丟棄 並且將編輯後的內容渲染到 `MarkdownCanvas` 內
 
-- 決定完任務內容後 `canvas` 的功能尚未完成
+- 但這個功能目前是獨立的 我希望可以將這個功能整合進去 `Edit` 和 `保存` 的按鈕裡面
+- 當使用者點擊 `Edit` 按鈕時 `MarkdownCanvas` 會變成可被編輯的狀態 也就是 `原始視圖` 的狀態
+- 當使用者點擊 `保存` 按鈕時 `MarkdownCanvas` 會變成不可被編輯的狀態 也就是 `編輯器視圖` 的狀態
+- 當使用者有透過編輯 編輯過 `MarkdownCanvas` 的內容時
 
-  - 目前已經可以順利將使用者的問題分成兩段 `chatCompletion` 第一段生成的代碼渲染進 `MarkdownCanvas`
-    內 第二段生成的解釋正常顯示於 `ChatBox` 內
-  - 但目前第一段渲染進 `MarkdownCanvas` 的內容並沒有透過 `streaming`
-    的方式輸出 第二段卻可以正常透過 `streaming` 的方式輸出到 `ChatBox`
-
-  - 我想在 `canvas` 模式下 將這個動作拆成兩個 `chatCompletion` 但 輸出的結果會跟 `chat` 模式一樣
-  - 當 `taskType === "canvas"` 的時候 會觸發兩個chat completion
-    - 第一個 `chatCompletion`
-      會先將user的問題放進去 並讓LLM只能透過一個代碼框來回答問題 並且 將這段用 `streaming`
-      的方式寫入 `MarkdownCanvas`
-    - 當上述完成以後 將問題與生成完畢的代碼框一起放進第二個 `chatCompletion` 來生成後續的描述
-    - 這兩個 `chatCompletion` 將會同時進行並且輸出在同一個 `ChatBox` 內 保持與 `chat`
-      模式相同的行為
+  - 當使用者點擊 `保存` 按鈕時 會將編輯後的內容透過引用的方式 等待使用者填入問題 最後送進
+    `chatCompletion` 並且將編輯後的內容渲染到 `MarkdownCanvas` 內
+  - 當使用者點擊 `Cancel` 按鈕時 會將編輯後的內容丟棄 並且將編輯後的內容渲染到 `MarkdownCanvas` 內
 
 - `MarkdownCanvas` 內 不知道為何渲染時並沒有因為他是 python 或是 markdown 而變色 或是 高亮
 

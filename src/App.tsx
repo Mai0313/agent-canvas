@@ -469,7 +469,7 @@ const App: React.FC = () => {
 
         // Create a separate code message ID for the MarkdownCanvas content
         const codeMessageId = uuidv4();
-        
+
         // Open the MarkdownCanvas immediately to prepare for streaming
         setMarkdownContent("");
         setEditingMessageId(codeMessageId);
@@ -479,11 +479,11 @@ const App: React.FC = () => {
         // 第一步：生成代码，并在生成过程中累积结果
         await chatCompletion([codeSystemMessage, userMessage], settings, (token) => {
           codeBlock += token;
-          
+
           // Update MarkdownCanvas content with each token received - true streaming
           setMarkdownContent(codeBlock);
           setCodeBlockPosition({ start: 0, end: codeBlock.length });
-          
+
           // 实时更新消息内容
           setMessages((prev) => {
             const updatedMessages = [...prev];
@@ -534,7 +534,7 @@ const App: React.FC = () => {
 
         // 确保我们不会意外更新 MarkdownCanvas 的内容
         setCodeBlockDetected(true);
-        
+
         // 生成解释文本
         await chatCompletion(
           [explanationSystemMessage, userMessage, codeContextMessage],
