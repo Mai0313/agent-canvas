@@ -173,6 +173,9 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     // Update raw markdown for raw view mode
     setRawMarkdown(cleanContent);
 
+    // Track if we should update the hasInitialContent state
+    const shouldSetHasInitialContent = cleanContent.trim() !== "" && !hasInitialContent;
+
     // Update BlockNote editor content
     const importMarkdown = async () => {
       try {
@@ -182,29 +185,34 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
         // Make sure we have valid blocks before replacing
         if (blocks && blocks.length > 0) {
           editor.replaceBlocks(editor.document, blocks);
-          
-          // 一旦有內容，標記為已有初始內容
-          if (cleanContent.trim() !== "") {
-            setHasInitialContent(true);
-          }
         }
 
+        // Batch our state updates to avoid the infinite loop
+        // Only update hasInitialContent if needed and not already done
+        if (shouldSetHasInitialContent) {
+          setHasInitialContent(true);
+        }
+        
+        // These updates don't depend on hasInitialContent
         setContentFullyLoaded(true);
-
+        
         // 當有結束標記時才生成標題
-        setShouldGenerateTitle(hasClosing);
+        if (hasClosing) {
+          setShouldGenerateTitle(true);
+        }
       } catch (error) {
         console.error("Error parsing markdown to blocks:", error);
       } finally {
-        // 確保loading狀態在有內容時關閉
-        if (cleanContent.trim() !== "" || hasInitialContent) {
+        // Only update loading state if we have content or already have initial content
+        if (cleanContent.trim() !== "") {
           setLoadingEditor(false);
         }
       }
     };
 
     importMarkdown();
-  }, [content, editor, isStreaming, hasEndingBackticks, hasInitialContent]);
+  // Remove hasInitialContent from the dependency array to break the infinite loop
+  }, [content, editor, isStreaming, hasEndingBackticks]);
 
   // Reset copy success message after 2 seconds
   useEffect(() => {
