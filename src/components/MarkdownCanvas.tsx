@@ -62,6 +62,11 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [isRawView, setIsRawView] = useState(false);
   const [loadingEditor, setLoadingEditor] = useState(true);
+  
+  // 新增狀態來防止閃爍
+  const [hasInitialContent, setHasInitialContent] = useState(false);
+  const isFirstRender = useRef(true);
+  const prevContentRef = useRef("");
 
   // Other existing states
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -80,6 +85,15 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const [showSelectionPopup, setShowSelectionPopup] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+
+  // 檢測是否正在流式傳輸內容 (streaming)
+  const isStreaming = useCallback((newContent: string, oldContent: string): boolean => {
+    // 如果內容增量式增加，可能是streaming
+    if (newContent.length > oldContent.length && newContent.startsWith(oldContent)) {
+      return true;
+    }
+    return false;
+  }, []);
 
   // 檢測是否存在結束標記（用於檢測完整代碼塊）
   const hasEndingBackticks = useCallback((text: string): boolean => {
@@ -113,8 +127,20 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 
   // Convert code to BlockNote format and update editor
   useEffect(() => {
-    setLoadingEditor(true);
-
+    // 檢查是否正在streaming
+    const streaming = isStreaming(content, prevContentRef.current);
+    prevContentRef.current = content;
+    
+    // 如果已經有內容且正在streaming，避免重新顯示loading狀態
+    if (hasInitialContent && streaming) {
+      // 對於streaming，我們不設置loading狀態，防止閃爍
+      setLoadingEditor(false);
+    } else if (isFirstRender.current || !streaming) {
+      // 只有第一次渲染或非streaming時才顯示loading
+      setLoadingEditor(true);
+      isFirstRender.current = false;
+    }
+    
     // Try to extract language from code block
     const languageMatch = content.match(/^```([^\s\n]+)/);
     if (languageMatch && languageMatch[1]) {
@@ -150,6 +176,11 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
         // Make sure we have valid blocks before replacing
         if (blocks && blocks.length > 0) {
           editor.replaceBlocks(editor.document, blocks);
+          
+          // 一旦有內容，標記為已有初始內容
+          if (cleanContent.trim() !== "") {
+            setHasInitialContent(true);
+          }
         }
 
         setContentFullyLoaded(true);
@@ -159,12 +190,15 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       } catch (error) {
         console.error("Error parsing markdown to blocks:", error);
       } finally {
-        setLoadingEditor(false);
+        // 確保loading狀態在有內容時關閉
+        if (cleanContent.trim() !== "" || hasInitialContent) {
+          setLoadingEditor(false);
+        }
       }
     };
 
     importMarkdown();
-  }, [content, editor, codeLanguage, hasEndingBackticks]);
+  }, [content, editor, isStreaming, hasEndingBackticks, hasInitialContent]);
 
   // Reset copy success message after 2 seconds
   useEffect(() => {
@@ -184,6 +218,10 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       setScrollPosition(window.scrollY || document.documentElement.scrollTop);
       // 只有當程式碼區塊完整時（有結束標記）才生成標題
       setShouldGenerateTitle(hasClosingBackticks);
+    } else {
+      // 關閉編輯器時重置狀態，確保下次打開時重新載入
+      isFirstRender.current = true;
+      setHasInitialContent(false);
     }
   }, [isOpen, hasClosingBackticks]);
 
@@ -327,12 +365,6 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       // Get current content as markdown before switching to raw view
       editor.blocksToMarkdownLossy(editor.document).then((markdown) => {
         let cleanContent = markdown;
-        // if (cleanContent.includes("markdown")) {
-        //   cleanContent = cleanContent.replace(/^```[\w-]*\s*\n/m, "");
-        //   if (cleanContent.includes("\n```")) {
-        //     cleanContent = cleanContent.replace(/\n```\s*$/m, "");
-        //   }
-        // }
         setRawMarkdown(cleanContent);
         setIsRawView(true);
       });
@@ -447,6 +479,9 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 
   if (!isOpen) return null;
 
+  // 只有當編輯器真正加載中且沒有初始內容時才顯示加載指示器
+  const showLoadingIndicator = loadingEditor && !hasInitialContent;
+
   return (
     <div className='markdown-canvas' ref={canvasRef}>
       <div className='markdown-header'>
@@ -481,7 +516,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       </div>
 
       <div className='markdown-content'>
-        {loadingEditor ? (
+        {showLoadingIndicator ? (
           <div className='loading-editor'>Loading Canvas...</div>
         ) : isRawView ? (
           <textarea
