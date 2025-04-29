@@ -77,22 +77,52 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     };
   }, []);
 
+  // 追踪用戶是否手動滾動的狀態
+  const userScrolledRef = useRef(false);
+
+  // 消息更新時的滾動處理
   useEffect(() => {
-    // Only scroll to bottom when:
-    // 1. User is near bottom
-    // 2. New messages arrive
-    // 3. During streaming
+    // 只有在以下情況才滾動到底部：
+    // 1. 用戶接近底部（而且沒有主動向上滾動）
+    // 2. 新消息到達
+    // 3. Streaming 時但前提是用戶沒有主動向上滾動
     const hasNewMessages = messages.length > prevMessagesLength;
     const isStreaming = !!streamingMessageId;
+    
+    // 如果是新消息，重置用戶滾動狀態（讓新對話能自動滾動）
+    if (hasNewMessages && messages.length !== prevMessagesLength) {
+      userScrolledRef.current = false;
+    }
 
-    if ((shouldScrollToBottom && hasNewMessages) || isStreaming) {
+    // 只有在用戶沒有主動滾動的情況下，才允許自動滾動
+    if (shouldScrollToBottom && !userScrolledRef.current && (hasNewMessages || isStreaming)) {
       scrollToBottom();
     }
 
     setPrevMessagesLength(messages.length);
-
-    // Removed automatic markdown detection to rely on task type management
   }, [messages, streamingMessageId, prevMessagesLength, shouldScrollToBottom]);
+
+  // 添加用戶手動滾動的監聽器
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleUserScroll = () => {
+      // 如果正在 streaming 並且用戶向上滾動，標記為用戶主動滾動
+      if (streamingMessageId && !isNearBottom()) {
+        userScrolledRef.current = true;
+      }
+      // 如果用戶滾動到接近底部，重置標記
+      else if (isNearBottom()) {
+        userScrolledRef.current = false;
+      }
+    };
+
+    container.addEventListener("scroll", handleUserScroll);
+    return () => {
+      container.removeEventListener("scroll", handleUserScroll);
+    };
+  }, [streamingMessageId]);
 
   // 新增：監聽自定義事件，從 MarkdownCanvas 獲取選中的文字
   useEffect(() => {
