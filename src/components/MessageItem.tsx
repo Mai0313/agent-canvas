@@ -9,6 +9,9 @@ import "@blocknote/mantine/style.css";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteEditor } from "@blocknote/core";
 
+// 導入代碼塊高亮功能
+import { codeBlock } from "@blocknote/code-block";
+
 // 導入圖標
 import copyCodeIcon from "../assets/icon/copy-code.svg";
 import editCodeIcon from "../assets/icon/edit-code.svg";
@@ -68,6 +71,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
   // Initialize a read-only editor for displaying content
   const editor = useCreateBlockNote({
+    // 添加代碼高亮支持
+    codeBlock,
     initialContent: [
       {
         type: "paragraph",

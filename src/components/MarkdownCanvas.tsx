@@ -21,6 +21,9 @@ import {
   useCreateBlockNote,
 } from "@blocknote/react";
 
+// 導入代碼塊高亮功能
+import { codeBlock } from "@blocknote/code-block";
+
 // 導入圖標
 import closeIcon from "../assets/icon/close-icon.svg";
 import copyCodeIcon from "../assets/icon/copy-code.svg";
@@ -43,6 +46,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
 }) => {
   // Create the editor instance with proper configuration
   const editor = useCreateBlockNote({
+    // 添加代碼塊高亮配置
+    codeBlock,
     // Providing a default block to avoid the "initialContent must be non-empty" error
     initialContent: [
       {
