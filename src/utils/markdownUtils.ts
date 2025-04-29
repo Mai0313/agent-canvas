@@ -1,21 +1,29 @@
+/**
+ * 檢測文本是否包含 Markdown 格式
+ */
 export const containsMarkdown = (text: string): boolean => {
-  // Basic detection of markdown-like content
+  if (!text) return false;
+
+  // 基本檢測 Markdown 類內容
   const markdownPatterns = [
-    /^#+\s+.+$/m, // Headers
-    /\*\*.+\*\*/, // Bold
-    /\*.+\*/, // Italic
-    /^>\s+.+$/m, // Blockquotes
-    /^```[\s\S]*?```$/m, // Code blocks
-    /^\s*[-*+]\s+.+$/m, // Lists
-    /^\s*\d+\.\s+.+$/m, // Numbered lists
-    /\[.+\]\(.+\)/, // Links
-    /!\[.+\]\(.+\)/, // Images
-    /^[\s-]{3,}$/m, // Horizontal rules
+    /^#+\s+.+$/m, // 標題
+    /\*\*.+\*\*/, // 粗體
+    /\*.+\*/, // 斜體
+    /^>\s+.+$/m, // 引用塊
+    /^```[\s\S]*?```$/m, // 代碼塊
+    /^\s*[-*+]\s+.+$/m, // 列表
+    /^\s*\d+\.\s+.+$/m, // 有序列表
+    /\[.+\]\(.+\)/, // 連結
+    /!\[.+\]\(.+\)/, // 圖片
+    /^[\s-]{3,}$/m, // 水平線
   ];
 
   return markdownPatterns.some((pattern) => pattern.test(text));
 };
 
+/**
+ * 提取文本中最長的代碼塊
+ */
 export const extractLongestCodeBlock = (
   text: string,
 ): {
@@ -23,13 +31,17 @@ export const extractLongestCodeBlock = (
   blockPosition: { start: number; end: number } | null;
   lineCount: number;
 } => {
-  // Find all code blocks using a more compatible approach than matchAll
+  if (!text) {
+    return { longestBlock: "", blockPosition: null, lineCount: 0 };
+  }
+
+  // 查找所有代碼塊
   const codeBlockRegex = /```[\s\S]*?```/g;
   const matches: Array<{ text: string; index: number; lineCount: number }> = [];
 
   let match;
   while ((match = codeBlockRegex.exec(text)) !== null) {
-    // Count the number of lines in this code block
+    // 計算代碼塊中的行數
     const lineCount = (match[0].match(/\n/g) || []).length;
 
     matches.push({
@@ -43,7 +55,7 @@ export const extractLongestCodeBlock = (
     return { longestBlock: "", blockPosition: null, lineCount: 0 };
   }
 
-  // Find the longest code block
+  // 找出最長的代碼塊
   let longestBlockIndex = 0;
   let maxLength = 0;
 
@@ -65,45 +77,9 @@ export const extractLongestCodeBlock = (
   };
 };
 
-// New function to find the first code block with more than 5 lines
-export const findLongCodeBlock = (
-  text: string,
-  minLines: number = 5,
-): {
-  codeBlock: string;
-  blockPosition: { start: number; end: number } | null;
-  lineCount: number;
-} => {
-  // Find all code blocks
-  const codeBlockRegex = /```[\s\S]*?```/g;
-
-  let match;
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    // Count the number of lines in this code block
-    const lineCount = (match[0].match(/\n/g) || []).length;
-
-    // If this code block has more than minLines lines, return it
-    if (lineCount >= minLines) {
-      const start = match.index;
-      const end = start + match[0].length;
-
-      return {
-        codeBlock: match[0],
-        blockPosition: { start, end },
-        lineCount: lineCount,
-      };
-    }
-  }
-
-  // If no code block with > minLines lines is found, return empty
-  return {
-    codeBlock: "",
-    blockPosition: null,
-    lineCount: 0,
-  };
-};
-
-// Function to detect an in-progress code block and check if it has more than minLines
+/**
+ * 檢測正在進行中的代碼塊（尚未閉合的代碼塊）
+ */
 export const detectInProgressCodeBlock = (
   text: string,
   minLines: number = 5,
@@ -112,27 +88,31 @@ export const detectInProgressCodeBlock = (
   blockPosition: { start: number; end: number } | null;
   lineCount: number;
 } => {
-  // Find the last occurrence of code block start marker
+  if (!text) {
+    return { codeBlock: "", blockPosition: null, lineCount: 0 };
+  }
+
+  // 找到最後一個代碼塊開始標記
   const lastBlockStartIndex = text.lastIndexOf("```");
 
   if (lastBlockStartIndex === -1) {
     return { codeBlock: "", blockPosition: null, lineCount: 0 };
   }
 
-  // Check if there's a closing marker after this opening
+  // 檢查在此開始標記之後是否有結束標記
   const textAfterLastOpen = text.substring(lastBlockStartIndex);
   const hasClosingMarker = textAfterLastOpen.indexOf("```", 3) !== -1;
 
-  // If there is a closing marker, this block is complete, not in-progress
+  // 如果有結束標記，則這個塊是完整的，不是進行中的
   if (hasClosingMarker) {
     return { codeBlock: "", blockPosition: null, lineCount: 0 };
   }
 
-  // Count lines in this in-progress code block
+  // 計算此進行中代碼塊的行數
   const inProgressBlock = textAfterLastOpen;
   const lineCount = (inProgressBlock.match(/\n/g) || []).length;
 
-  // If the line count is >= minLines, return this block
+  // 如果行數 >= minLines，則返回此塊
   if (lineCount >= minLines) {
     return {
       codeBlock: inProgressBlock,

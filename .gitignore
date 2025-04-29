@@ -138,5 +138,6 @@ dist
 # Build
 build/
 
-# Linter
-megalinter-reports/
+prompt.md
+/.vscode/
+/venv/

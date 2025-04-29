@@ -2,11 +2,21 @@ import React, { ReactNode, useState, useEffect, useRef, useCallback } from "reac
 import { Message } from "../types";
 import SelectionPopup from "./SelectionPopup";
 
+// Import BlockNote components
+import "@blocknote/core/fonts/inter.css";
+import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
+import { useCreateBlockNote } from "@blocknote/react";
+import { BlockNoteEditor } from "@blocknote/core";
+
 // 導入圖標
 import copyCodeIcon from "../assets/icon/copy-code.svg";
 import editCodeIcon from "../assets/icon/edit-code.svg";
 import deleteIcon from "../assets/icon/delete.svg";
 import regenerateIcon from "../assets/icon/regenerate.svg";
+
+// Track if this is the first render for streaming messages
+let initialRenderComplete = false;
 
 interface MessageItemProps {
   message: Message;
@@ -48,10 +58,37 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
+  const [blockNoteEditor, setBlockNoteEditor] = useState<BlockNoteEditor | null>(null);
+  const [isBlockNoteLoading, setIsBlockNoteLoading] = useState(true);
+
+  // Keep track of streaming state to prevent flickering
+  const [hasInitialContent, setHasInitialContent] = useState(false);
+  const prevStreamingRef = useRef(isStreaming);
 
   const messageRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Initialize a read-only editor for displaying content
+  const editor = useCreateBlockNote({
+    initialContent: [
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Loading...",
+            styles: {},
+          },
+        ],
+      },
+    ],
+  });
+
+  // Store the editor instance
+  useEffect(() => {
+    setBlockNoteEditor(editor);
+  }, [editor]);
 
   // Helper function to convert message content to string, wrapped in useCallback
   const getMessageContentAsString = useCallback((): string => {
@@ -67,6 +104,78 @@ const MessageItem: React.FC<MessageItemProps> = ({
     }
     return "";
   }, [message.content]);
+
+  // Update streaming state tracking
+  useEffect(() => {
+    // When we have content and we're streaming, mark that we have initial content
+    if (isStreaming && getMessageContentAsString().trim() !== "") {
+      setHasInitialContent(true);
+    }
+
+    // If streaming stops, reset our flag after a short delay
+    if (!isStreaming && prevStreamingRef.current) {
+      setTimeout(() => {
+        setHasInitialContent(false);
+      }, 500); // Small delay to avoid flickering when streaming ends
+    }
+
+    prevStreamingRef.current = isStreaming;
+  }, [isStreaming, getMessageContentAsString]);
+
+  // Update BlockNote editor content when message changes
+  useEffect(() => {
+    const updateEditor = async () => {
+      if (!blockNoteEditor) return;
+
+      // Get the content string
+      const contentStr = getMessageContentAsString();
+      const hasContent = contentStr.trim() !== "";
+
+      // Only show loading initially or when not streaming
+      // This prevents flickering during streaming
+      if (!isStreaming && !isGeneratingContent()) {
+        setIsBlockNoteLoading(true);
+      }
+
+      try {
+        // Only update the editor if we have content
+        if (hasContent) {
+          const blocks = await blockNoteEditor.tryParseMarkdownToBlocks(contentStr);
+          if (blocks && blocks.length > 0) {
+            blockNoteEditor.replaceBlocks(blockNoteEditor.document, blocks);
+          }
+
+          // Only mark as not loading when we're not streaming or we have initial content
+          if (!isStreaming || (isStreaming && hasInitialContent)) {
+            setIsBlockNoteLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing content to BlockNote format:", error);
+        setIsBlockNoteLoading(false);
+      }
+
+      // Make editor read-only
+      blockNoteEditor._tiptapEditor.setEditable(false);
+    };
+
+    // Check if we're in any special state that should prevent loading indicator
+    function isGeneratingContent() {
+      return message.isGeneratingImage || message.isGeneratingCode;
+    }
+
+    // Update the editor when message content changes
+    if (!isEditMode && blockNoteEditor) {
+      updateEditor();
+    }
+  }, [
+    message.content,
+    blockNoteEditor,
+    getMessageContentAsString,
+    isEditMode,
+    isStreaming,
+    hasInitialContent,
+  ]);
 
   // 當模型下拉選單打開時，獲取可用模型
   useEffect(() => {
@@ -182,6 +291,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
       onEdit(message.id, editedContent);
     }
     setIsEditMode(false);
+
+    // 如果是用戶消息，編輯後自動重新生成回應
+    if (message.role === "user" && onRegenerate) {
+      onRegenerate(message.id);
+    }
   };
 
   // 處理取消按鈕點擊事件
@@ -227,11 +341,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
     return null;
   };
 
-  // Function to render the message content with a "View Code" button if needed
-  const processMessageContent = (): ReactNode[] => {
+  // Function to render the message content with BlockNote or fallback options
+  const processMessageContent = (): ReactNode => {
     // 如果處於編輯模式，渲染文本編輯區
-    if (isEditMode && message.role === "assistant") {
-      return [
+    if (isEditMode) {
+      return (
         <div key='edit-container' className='edit-container'>
           <textarea
             ref={textareaRef}
@@ -248,13 +362,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
               Cancel
             </button>
           </div>
-        </div>,
-      ];
+        </div>
+      );
     }
 
     // 如果正在生成圖像，顯示動態加載效果
     if (message.isGeneratingImage) {
-      return [
+      return (
         <div key='generating-image' className='generating-image-container'>
           <div className='generating-image-animation'>
             <div className='brush-stroke'></div>
@@ -264,68 +378,65 @@ const MessageItem: React.FC<MessageItemProps> = ({
           <div className='generating-image-text'>
             {typeof message.content === "string" ? message.content : "Creating your Image..."}
           </div>
-        </div>,
-      ];
+        </div>
+      );
     }
 
-    // Handle array type content
-    if (Array.isArray(message.content)) {
-      const elements: ReactNode[] = [];
-
-      // Add text content
-      const textItems = message.content.filter((item) => item.type === "text");
-      textItems.forEach((item, idx) => {
-        if (item.text) {
-          const lines = item.text.split("\n");
-          lines.forEach((line, lineIdx) => {
-            elements.push(<div key={`text-${idx}-line-${lineIdx}`}>{line || <br />}</div>);
-          });
-        }
-      });
-
-      return elements;
+    // 如果正在生成代碼，顯示靜態占位符，防止內容跳動
+    if (message.isGeneratingCode) {
+      return (
+        <div key='generating-code' className='generating-code-container'>
+          <div className='generating-code-text'>
+            {typeof message.content === "string" ? message.content : "正在生成代碼..."}
+          </div>
+          <div className='generating-code-hint'>代碼將直接輸出到右側編輯器</div>
+        </div>
+      );
     }
 
-    // From here on, we know message.content is a string
-    const messageContent = message.content as string;
-
-    // Check if there's a code block in the message
-    const hasCodeBlock = messageContent.includes("```");
-
-    // If this message has a code block that's currently being displayed in the canvas
-    if (hasCodeBlock && isEditing && longestCodeBlockPosition) {
-      // Create message parts: before the code block, a placeholder, and after the code block
-      const beforeCode = messageContent.substring(0, longestCodeBlockPosition.start);
-      const afterCode = messageContent.substring(longestCodeBlockPosition.end);
-
-      // Create an array of elements
-      const elements: ReactNode[] = [];
-
-      // Add lines before the code block
-      if (beforeCode.trim()) {
-        elements.push(
-          ...beforeCode
-            .split("\n")
-            .map((line: string, i: number) => <div key={`before-${i}`}>{line || <br />}</div>),
-        );
-      }
-
-      // Add lines after the code block
-      if (afterCode.trim()) {
-        elements.push(
-          ...afterCode
-            .split("\n")
-            .map((line: string, i: number) => <div key={`after-${i}`}>{line || <br />}</div>),
-        );
-      }
-
-      return elements;
+    // For streaming content, once we have initial content, always show the editor
+    // This prevents flickering during streaming updates
+    if (isStreaming && hasInitialContent && blockNoteEditor) {
+      return (
+        <div className='blocknote-message-container'>
+          <BlockNoteView
+            editor={blockNoteEditor}
+            theme='dark'
+            editable={false}
+            formattingToolbar={false}
+          />
+        </div>
+      );
     }
 
-    // Regular content display (no code blocks or not currently editing)
-    return messageContent
-      .split("\n")
-      .map((line: string, i: number) => <div key={i}>{line || <br />}</div>);
+    // If this is normal (non-streaming) content, use BlockNote for formatting
+    if (blockNoteEditor && !isBlockNoteLoading) {
+      return (
+        <div className='blocknote-message-container'>
+          <BlockNoteView
+            editor={blockNoteEditor}
+            theme='dark'
+            editable={false}
+            formattingToolbar={false}
+          />
+        </div>
+      );
+    }
+
+    // Only show loading indicator if we're not streaming or we don't have content yet
+    if (isBlockNoteLoading && (!isStreaming || !hasInitialContent)) {
+      return <div className='message-loading'>Loading content...</div>;
+    }
+
+    // Fallback to original rendering if BlockNote isn't available
+    const messageContent = getMessageContentAsString();
+    return (
+      <div className='message-text-fallback'>
+        {messageContent.split("\n").map((line, i) => (
+          <div key={i}>{line || <br />}</div>
+        ))}
+      </div>
+    );
   };
 
   // Handle "Ask GPT" button click
@@ -356,9 +467,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
       <div className='message-content'>
         {processMessageContent()}
-        {isStreaming && message.content === "" && !message.isGeneratingImage && (
-          <div className='typing-indicator'>...</div>
-        )}
+        {isStreaming &&
+          message.content === "" &&
+          !message.isGeneratingImage &&
+          !message.isGeneratingCode && <div className='typing-indicator'>...</div>}
         {/* Render images from message content array */}
         {Array.isArray(message.content) && renderMessageImages()}
         {/* Render legacy image URL if present */}
@@ -369,8 +481,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
         )}
       </div>
 
-      {/* 消息操作按鈕 - 只在助手消息且非編輯模式下顯示 */}
-      {message.role === "assistant" && !isEditMode && !isStreaming && (
+      {/* 消息操作按鈕 - 對於所有非流式傳輸的消息都顯示 */}
+      {!isEditMode && !isStreaming && (
         <div className='message-actions'>
           <button
             onClick={handleCopy}
@@ -386,62 +498,69 @@ const MessageItem: React.FC<MessageItemProps> = ({
             Edit
           </button>
 
-          <button
-            onClick={handleDelete}
-            className='action-button with-icon'
-            title='Delete message'
-          >
-            <img src={deleteIcon} alt='Delete' className='icon-action' />
-            Delete
-          </button>
+          {/* 只對助手消息顯示刪除和重新生成按鈕 */}
+          {message.role === "assistant" && (
+            <>
+              <button
+                onClick={handleDelete}
+                className='action-button with-icon'
+                title='Delete message'
+              >
+                <img src={deleteIcon} alt='Delete' className='icon-action' />
+                Delete
+              </button>
 
-          <div className='regenerate-dropdown-container' ref={dropdownRef}>
-            <button
-              onClick={toggleModelDropdown}
-              className='action-button with-icon regenerate-button'
-              title='Regenerate response'
-            >
-              <img src={regenerateIcon} alt='Regenerate' className='icon-action' />
-              Regenerate {showModelDropdown ? "▲" : "▼"}
-            </button>
+              <div className='regenerate-dropdown-container' ref={dropdownRef}>
+                <button
+                  onClick={toggleModelDropdown}
+                  className='action-button with-icon regenerate-button'
+                  title='Regenerate response'
+                >
+                  <img src={regenerateIcon} alt='Regenerate' className='icon-action' />
+                  Regenerate {showModelDropdown ? "▲" : "▼"}
+                </button>
 
-            {showModelDropdown && (
-              <div className='model-dropdown'>
-                <div className='model-dropdown-header'>Choose model:</div>
+                {showModelDropdown && (
+                  <div className='model-dropdown'>
+                    <div className='model-dropdown-header'>Choose model:</div>
 
-                {/* 當前模型選項 */}
-                <div className='model-dropdown-item' onClick={() => handleRegenerate()}>
-                  Current ({currentModel || "default"})
-                </div>
+                    {/* 當前模型選項 */}
+                    <div className='model-dropdown-item' onClick={() => handleRegenerate()}>
+                      Current ({currentModel || "default"})
+                    </div>
 
-                {/* 載入提示 */}
-                {(loadingModels || isLoadingModels) && (
-                  <div className='model-dropdown-item loading'>Loading models...</div>
-                )}
+                    {/* 載入提示 */}
+                    {(loadingModels || isLoadingModels) && (
+                      <div className='model-dropdown-item loading'>Loading models...</div>
+                    )}
 
-                {/* 可用模型列表 */}
-                {availableModels.length > 0 &&
-                  !loadingModels &&
-                  !isLoadingModels &&
-                  availableModels
-                    .filter((model) => model !== currentModel) // 過濾掉當前模型
-                    .map((model) => (
-                      <div
-                        key={model}
-                        className='model-dropdown-item'
-                        onClick={() => handleRegenerate(model)}
-                      >
-                        {model}
+                    {/* 可用模型列表 */}
+                    {availableModels.length > 0 &&
+                      !loadingModels &&
+                      !isLoadingModels &&
+                      availableModels
+                        .filter((model) => model !== currentModel) // 過濾掉當前模型
+                        .map((model) => (
+                          <div
+                            key={model}
+                            className='model-dropdown-item'
+                            onClick={() => handleRegenerate(model)}
+                          >
+                            {model}
+                          </div>
+                        ))}
+
+                    {/* 沒有模型時顯示提示 */}
+                    {!loadingModels && !isLoadingModels && availableModels.length === 0 && (
+                      <div className='model-dropdown-item no-models'>
+                        No other models available
                       </div>
-                    ))}
-
-                {/* 沒有模型時顯示提示 */}
-                {!loadingModels && !isLoadingModels && availableModels.length === 0 && (
-                  <div className='model-dropdown-item no-models'>No other models available</div>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       )}
 

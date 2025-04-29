@@ -9,7 +9,6 @@ const createClient = (settings: ModelSetting) => {
     return new AzureOpenAI({
       apiKey: settings.apiKey,
       baseURL: settings.baseUrl + "/openai",
-      // In MTK, Model name equals to deployment name
       deployment: settings.azureDeployment || settings.model,
       apiVersion: settings.azureApiVersion,
       dangerouslyAllowBrowser: true,

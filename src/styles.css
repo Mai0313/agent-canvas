@@ -816,6 +816,31 @@ body {
   animation: pulse 2s infinite;
 }
 
+/* Styles for code generation indicator */
+.generating-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px 0;
+  text-align: center;
+  background-color: rgba(44, 123, 229, 0.06);
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
+.generating-code-text {
+  font-size: 16px;
+  color: var(--primary-color);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.generating-code-hint {
+  font-size: 14px;
+  color: var(--secondary-text);
+  opacity: 0.8;
+}
+
 /* Selection popup styling */
 .selection-popup {
   position: absolute;
@@ -983,7 +1008,6 @@ body {
 .message-actions .action-button.copy-success {
   background-color: #ecfdf5;
   color: #0d9488;
-  border-color: #0d9488;
 }
 
 /* 編輯模式下的消息樣式 */
@@ -1116,4 +1140,54 @@ body {
 
 .model-dropdown-item:not(:last-child) {
   border-bottom: 1px solid #f0f0f0;
+}
+
+/* BlockNote styling for message content */
+.blocknote-message-container {
+  width: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.blocknote-message-container .bn-container {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.blocknote-message-container .bn-editor {
+  min-height: auto !important;
+  background-color: transparent !important;
+}
+
+.blocknote-message-container .bn-editor .ProseMirror {
+  padding: 0 !important;
+  min-height: auto !important;
+}
+
+/* BlockNote styling adjustments for user and assistant messages */
+.message.user .blocknote-message-container .bn-editor {
+  color: var(--text-color) !important;
+}
+
+.message.assistant .blocknote-message-container .bn-editor {
+  color: var(--text-color) !important;
+}
+
+/* Styling for message loading state */
+.message-loading {
+  font-size: 14px;
+  color: var(--secondary-text);
+  padding: 4px 0;
+  animation: pulse 1.5s infinite;
+}
+
+/* Fallback text rendering */
+.message-text-fallback {
+  line-height: 1.5;
+}
+
+/* Fix automatic scaling of image in messages */
+.blocknote-message-container img {
+  max-width: 100%;
+  height: auto;
 }

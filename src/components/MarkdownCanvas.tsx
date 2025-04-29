@@ -58,7 +58,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     ],
   });
 
-  const [editMode, setEditMode] = useState(false);
+  const [editMode] = useState(false);
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [isRawView, setIsRawView] = useState(false);
   const [loadingEditor, setLoadingEditor] = useState(true);
@@ -144,11 +144,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     // Update BlockNote editor content
     const importMarkdown = async () => {
       try {
-        // Prepare markdown with proper code fence
-        const markdownContent = cleanContent;
-
         // Convert markdown to BlockNote blocks
-        const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
+        const blocks = await editor.tryParseMarkdownToBlocks(cleanContent);
 
         // Make sure we have valid blocks before replacing
         if (blocks && blocks.length > 0) {
@@ -290,59 +287,6 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     }
   }, [editor, isRawView, rawMarkdown]);
 
-  // Toggle edit mode
-  const handleEdit = () => {
-    setEditMode(true);
-  };
-
-  // Save changes
-  const handleSave = async () => {
-    let contentToSave;
-
-    if (isRawView) {
-      contentToSave = rawMarkdown;
-
-      // Update the BlockNote editor content from raw markdown
-      try {
-        const markdownContent = `\`\`\`${codeLanguage}\n${rawMarkdown}\n\`\`\``;
-        const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
-        editor.replaceBlocks(editor.document, blocks);
-      } catch (error) {
-        console.error("Error updating editor content:", error);
-      }
-    } else {
-      contentToSave = await getCleanCodeContent();
-    }
-
-    onSave(contentToSave);
-    setEditMode(false);
-
-    // 檢查儲存的內容是否有完整的代碼塊（開始和結束標記）
-    const hasEndingMarker = hasEndingBackticks(`\`\`\`${codeLanguage}\n${contentToSave}\n\`\`\``);
-    setShouldGenerateTitle(hasEndingMarker);
-    setHasClosingBackticks(hasEndingMarker);
-  };
-
-  // Cancel edit
-  const handleCancel = () => {
-    setIsRawView(false);
-    setEditMode(false);
-
-    // Reset editor content to original
-    const importOriginalMarkdown = async () => {
-      try {
-        const cleanContent = content.replace(/^```[\w-]*\s*\n/m, "").replace(/\n```\s*$/m, "");
-        const markdownContent = `\`\`\`${codeLanguage}\n${cleanContent}\n\`\`\``;
-        const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
-        editor.replaceBlocks(editor.document, blocks);
-      } catch (error) {
-        console.error("Error resetting editor content:", error);
-      }
-    };
-
-    importOriginalMarkdown();
-  };
-
   // Handle raw markdown changes in textarea
   const handleRawMarkdownChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
@@ -398,12 +342,11 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       // Update the editor with the raw markdown
       const updateFromRaw = async () => {
         try {
-          const markdownContent = rawMarkdown; // `\`\`\`${codeLanguage}\n${rawMarkdown}\n\`\`\``;
-          const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
+          const blocks = await editor.tryParseMarkdownToBlocks(rawMarkdown);
           editor.replaceBlocks(editor.document, blocks);
 
           // 檢查轉換後的內容是否有完整代碼塊
-          const hasClosing = hasEndingBackticks(markdownContent);
+          const hasClosing = hasEndingBackticks(rawMarkdown);
           setHasClosingBackticks(hasClosing);
         } catch (error) {
           console.error("Error updating from raw markdown:", error);
@@ -517,42 +460,29 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
             onClick={handleManualGenerateTitle}
             disabled={isGeneratingTitle || !hasClosingBackticks}
             className='title-button'
-            title={!hasClosingBackticks ? "需要完整的代碼塊（有結束標記```）才能生成標題" : ""}
+            title={!hasClosingBackticks ? "Waiting for the code block to be done." : ""}
           >
-            {isGeneratingTitle ? "生成中..." : "AI 標題"}
+            {isGeneratingTitle ? "Generating..." : "AI Title"}
           </button>
           <button onClick={toggleRawView} className='title-button' style={{ marginLeft: "8px" }}>
-            {isRawView ? "保存" : "編輯"}
+            <img src={editCodeIcon} alt='Edit' width='8' height='8' />
+            {isRawView ? "Save" : "Edit"}
           </button>
         </div>
         <div className='markdown-controls'>
           <button
             onClick={handleCopyCode}
             className={`icon-button ${copySuccess ? "success" : ""}`}
-            title={copySuccess ? "已複製！" : "複製代碼"}
+            title={copySuccess ? "Copied" : "Copy"}
           >
             <img src={copyCodeIcon} alt='Copy' width='24' height='24' />
           </button>
-          {!editMode ? (
-            <button onClick={handleEdit} className='icon-button' title='編輯代碼'>
-              <img src={editCodeIcon} alt='Edit' width='24' height='24' />
-            </button>
-          ) : (
-            <>
-              <button onClick={handleSave} className='action-button'>
-                保存
-              </button>
-              <button onClick={handleCancel} className='action-button'>
-                取消
-              </button>
-            </>
-          )}
         </div>
       </div>
 
       <div className='markdown-content'>
         {loadingEditor ? (
-          <div className='loading-editor'>載入編輯器中...</div>
+          <div className='loading-editor'>Loading Canvas...</div>
         ) : isRawView ? (
           <textarea
             ref={rawEditorRef}

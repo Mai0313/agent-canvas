@@ -1,5 +1,5 @@
 services:
-  frontend:
+  agent-canvas:
     image: mtkomcr.mediatek.inc/srv-aith/agent-canvas
     build:
       context: .

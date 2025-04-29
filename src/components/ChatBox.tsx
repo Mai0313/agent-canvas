@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Message, ModelSetting, MessageContent } from "../types";
 import MessageItem from "./MessageItem";
-import { containsMarkdown } from "../utils/markdownUtils";
 // 導入圖標
 import sendMessageIcon from "../assets/icon/send-message.svg";
 
@@ -79,10 +78,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   }, []);
 
   useEffect(() => {
-    // 只有在以下情況才滾動到底部：
-    // 1. 用戶靠近底部
-    // 2. 有新消息到達
-    // 3. 正在流式傳輸消息
+    // Only scroll to bottom when:
+    // 1. User is near bottom
+    // 2. New messages arrive
+    // 3. During streaming
     const hasNewMessages = messages.length > prevMessagesLength;
     const isStreaming = !!streamingMessageId;
 
@@ -92,17 +91,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     setPrevMessagesLength(messages.length);
 
-    // 檢查最新的助手消息是否包含 markdown
-    const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
-
-    if (
-      lastAssistantMessage &&
-      typeof lastAssistantMessage.content === "string" &&
-      containsMarkdown(lastAssistantMessage.content)
-    ) {
-      onMarkdownDetected(lastAssistantMessage.content as string, lastAssistantMessage.id);
-    }
-  }, [messages, onMarkdownDetected, streamingMessageId, prevMessagesLength, shouldScrollToBottom]);
+    // Removed automatic markdown detection to rely on task type management
+  }, [messages, streamingMessageId, prevMessagesLength, shouldScrollToBottom]);
 
   // 新增：監聽自定義事件，從 MarkdownCanvas 獲取選中的文字
   useEffect(() => {
