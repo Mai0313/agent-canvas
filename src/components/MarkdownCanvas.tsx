@@ -398,7 +398,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       // Update the editor with the raw markdown
       const updateFromRaw = async () => {
         try {
-          const markdownContent = rawMarkdown;  // `\`\`\`${codeLanguage}\n${rawMarkdown}\n\`\`\``;
+          const markdownContent = rawMarkdown; // `\`\`\`${codeLanguage}\n${rawMarkdown}\n\`\`\``;
           const blocks = await editor.tryParseMarkdownToBlocks(markdownContent);
           editor.replaceBlocks(editor.document, blocks);
 
@@ -564,57 +564,41 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
         ) : (
           <div className='blocknote-container' ref={previewRef} style={{ height: "100%" }}>
             {/* Switch to BlockNoteView from Mantine with proper formatting toolbar */}
-            <BlockNoteView editor={editor} theme="dark" editable={editMode} formattingToolbar={false}>
+            <BlockNoteView
+              editor={editor}
+              theme='dark'
+              editable={editMode}
+              formattingToolbar={false}
+            >
               <FormattingToolbarController
                 formattingToolbar={() => (
                   <FormattingToolbar>
                     <BlockTypeSelect key={"blockTypeSelect"} />
-                    
-                    <BasicTextStyleButton
-                      basicTextStyle={"bold"}
-                      key={"boldStyleButton"}
-                    />
-                    <BasicTextStyleButton
-                      basicTextStyle={"italic"}
-                      key={"italicStyleButton"}
-                    />
+
+                    <BasicTextStyleButton basicTextStyle={"bold"} key={"boldStyleButton"} />
+                    <BasicTextStyleButton basicTextStyle={"italic"} key={"italicStyleButton"} />
                     <BasicTextStyleButton
                       basicTextStyle={"underline"}
                       key={"underlineStyleButton"}
                     />
-                    <BasicTextStyleButton
-                      basicTextStyle={"strike"}
-                      key={"strikeStyleButton"}
-                    />
-                    <BasicTextStyleButton
-                      key={"codeStyleButton"}
-                      basicTextStyle={"code"}
-                    />
-                    
-                    <TextAlignButton
-                      textAlignment={"left"}
-                      key={"textAlignLeftButton"}
-                    />
-                    <TextAlignButton
-                      textAlignment={"center"}
-                      key={"textAlignCenterButton"}
-                    />
-                    <TextAlignButton
-                      textAlignment={"right"}
-                      key={"textAlignRightButton"}
-                    />
-                    
+                    <BasicTextStyleButton basicTextStyle={"strike"} key={"strikeStyleButton"} />
+                    <BasicTextStyleButton key={"codeStyleButton"} basicTextStyle={"code"} />
+
+                    <TextAlignButton textAlignment={"left"} key={"textAlignLeftButton"} />
+                    <TextAlignButton textAlignment={"center"} key={"textAlignCenterButton"} />
+                    <TextAlignButton textAlignment={"right"} key={"textAlignRightButton"} />
+
                     <ColorStyleButton key={"colorStyleButton"} />
-                    
+
                     <NestBlockButton key={"nestBlockButton"} />
                     <UnnestBlockButton key={"unnestBlockButton"} />
-                    
+
                     <CreateLinkButton key={"createLinkButton"} />
                   </FormattingToolbar>
                 )}
               />
             </BlockNoteView>
-            
+
             {showSelectionPopup && (
               <SelectionPopup
                 position={popupPosition}
