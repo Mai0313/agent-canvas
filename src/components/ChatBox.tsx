@@ -63,7 +63,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   // 追踪用戶是否手動滾動的狀態
   const userScrolledRef = useRef(false);
-  
+
   // 追踪是否應該自動滾動的狀態（只有特定情況才啟用）
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
 
@@ -97,14 +97,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     // 2. Streaming 內容更新且用戶之前就在底部（autoScrollEnabled 為 true）
     const hasNewMessages = messages.length > prevMessagesLength;
     const isStreaming = !!streamingMessageId;
-    
+
     // 如果是全新的消息（不是更新現有消息），重置滾動狀態
     if (hasNewMessages && messages.length !== prevMessagesLength) {
       // 發送新消息時，無條件滾動到底部一次
       scrollToBottom();
       setAutoScrollEnabled(true);
       userScrolledRef.current = false;
-    } 
+    }
     // 如果是 streaming 更新，只在用戶未手動滾動時才滾動
     else if (isStreaming && autoScrollEnabled && !userScrolledRef.current) {
       scrollToBottom();

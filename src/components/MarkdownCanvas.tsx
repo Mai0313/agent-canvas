@@ -68,7 +68,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [isRawView, setIsRawView] = useState(false);
   const [loadingEditor, setLoadingEditor] = useState(true);
-  
+
   // 新增狀態來防止閃爍
   const [hasInitialContent, setHasInitialContent] = useState(false);
   const isFirstRender = useRef(true);
@@ -136,7 +136,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     // 檢查是否正在streaming
     const streaming = isStreaming(content, prevContentRef.current);
     prevContentRef.current = content;
-    
+
     // 如果已經有內容且正在streaming，避免重新顯示loading狀態
     if (hasInitialContent && streaming) {
       // 對於streaming，我們不設置loading狀態，防止閃爍
@@ -146,7 +146,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       setLoadingEditor(true);
       isFirstRender.current = false;
     }
-    
+
     // Try to extract language from code block
     const languageMatch = content.match(/^```([^\s\n]+)/);
     if (languageMatch && languageMatch[1]) {
@@ -192,10 +192,10 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
         if (shouldSetHasInitialContent) {
           setHasInitialContent(true);
         }
-        
+
         // These updates don't depend on hasInitialContent
         setContentFullyLoaded(true);
-        
+
         // 當有結束標記時才生成標題
         if (hasClosing) {
           setShouldGenerateTitle(true);
@@ -211,7 +211,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     };
 
     importMarkdown();
-  // 添加 hasInitialContent 到依賴數組，但使用條件檢查來避免無限循環
+    // 添加 hasInitialContent 到依賴數組，但使用條件檢查來避免無限循環
   }, [content, editor, isStreaming, hasEndingBackticks, hasInitialContent]);
 
   // Reset copy success message after 2 seconds
