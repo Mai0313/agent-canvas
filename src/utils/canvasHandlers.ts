@@ -126,7 +126,7 @@ export const handleCanvasMode = async (
     if (messageIndex !== -1) {
       updatedMessages[messageIndex] = {
         ...updatedMessages[messageIndex],
-        content: "正在生成代碼...", // 使用靜態占位符，防止內容跳動
+        content: "Generating...", // 使用靜態占位符，防止內容跳動
         isGeneratingCode: true, // 標記此消息正在生成代碼到MarkdownCanvas，避免顯示"Loading content..."
       };
     }

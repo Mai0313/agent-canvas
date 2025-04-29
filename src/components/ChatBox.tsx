@@ -62,13 +62,27 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
   };
 
+  // 追踪用戶是否手動滾動的狀態
+  const userScrolledRef = useRef(false);
+  
+  // 追踪是否應該自動滾動的狀態（只有特定情況才啟用）
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+
   // 監聽滾動事件，判斷是否應該自動滾動
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
-      setShouldScrollToBottom(isNearBottom());
+      // 僅當用戶滾動到接近底部時，才重新啟用自動滾動
+      if (isNearBottom()) {
+        setAutoScrollEnabled(true);
+        userScrolledRef.current = false;
+      } else {
+        // 用戶不在底部，禁用自動滾動
+        setAutoScrollEnabled(false);
+        userScrolledRef.current = true;
+      }
     };
 
     container.addEventListener("scroll", handleScroll);
@@ -77,30 +91,28 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     };
   }, []);
 
-  // 追踪用戶是否手動滾動的狀態
-  const userScrolledRef = useRef(false);
-
   // 消息更新時的滾動處理
   useEffect(() => {
-    // 只有在以下情況才滾動到底部：
-    // 1. 用戶接近底部（而且沒有主動向上滾動）
-    // 2. 新消息到達
-    // 3. Streaming 時但前提是用戶沒有主動向上滾動
+    // 只在以下情況才滾動到底部：
+    // 1. 新消息到達（如發送新消息）且未被用戶手動禁用自動滾動
+    // 2. Streaming 內容更新且用戶之前就在底部（autoScrollEnabled 為 true）
     const hasNewMessages = messages.length > prevMessagesLength;
     const isStreaming = !!streamingMessageId;
     
-    // 如果是新消息，重置用戶滾動狀態（讓新對話能自動滾動）
+    // 如果是全新的消息（不是更新現有消息），重置滾動狀態
     if (hasNewMessages && messages.length !== prevMessagesLength) {
+      // 發送新消息時，無條件滾動到底部一次
+      scrollToBottom();
+      setAutoScrollEnabled(true);
       userScrolledRef.current = false;
-    }
-
-    // 只有在用戶沒有主動滾動的情況下，才允許自動滾動
-    if (shouldScrollToBottom && !userScrolledRef.current && (hasNewMessages || isStreaming)) {
+    } 
+    // 如果是 streaming 更新，只在用戶未手動滾動時才滾動
+    else if (isStreaming && autoScrollEnabled && !userScrolledRef.current) {
       scrollToBottom();
     }
 
     setPrevMessagesLength(messages.length);
-  }, [messages, streamingMessageId, prevMessagesLength, shouldScrollToBottom]);
+  }, [messages, streamingMessageId, prevMessagesLength]);
 
   // 添加用戶手動滾動的監聽器
   useEffect(() => {

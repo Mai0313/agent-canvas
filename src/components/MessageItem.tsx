@@ -392,9 +392,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
       return (
         <div key='generating-code' className='generating-code-container'>
           <div className='generating-code-text'>
-            {typeof message.content === "string" ? message.content : "正在生成代碼..."}
+            {typeof message.content === "string" ? message.content : "Generating..."}
           </div>
-          <div className='generating-code-hint'>代碼將直接輸出到右側編輯器</div>
+          <div className='generating-code-hint'>Response will be moved into Canvas</div>
         </div>
       );
     }
