@@ -14,5 +14,4 @@ FROM builder AS prod
 WORKDIR /app
 COPY . .
 RUN yarn install && \
-    yarn cache clean --all && \
-    yarn build
+    yarn cache clean --all

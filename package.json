@@ -19,7 +19,6 @@
   },
   "scripts": {
     "dev": "node scripts/dev.js",
-    "build": "react-scripts build",
     "start": "node scripts/start.js",
     "lint": "prettier . --write",
     "test": "react-scripts test",
