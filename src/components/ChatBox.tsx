@@ -48,7 +48,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
-  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
   const [prevMessagesLength, setPrevMessagesLength] = useState(0);
   const [pastedImages, setPastedImages] = useState<{ url: string; file: File }[]>([]);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -112,7 +111,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     setPrevMessagesLength(messages.length);
-  }, [messages, streamingMessageId, prevMessagesLength]);
+  }, [messages, streamingMessageId, prevMessagesLength, autoScrollEnabled]);
 
   // 添加用戶手動滾動的監聽器
   useEffect(() => {
@@ -245,7 +244,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       setQuotedText(null);
       setPastedImages([]);
       // 用戶發送消息後設置為自動滾動到底部
-      setShouldScrollToBottom(true);
+      setAutoScrollEnabled(true);
+      userScrolledRef.current = false;
     }
   };
 

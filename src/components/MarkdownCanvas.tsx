@@ -211,8 +211,8 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
     };
 
     importMarkdown();
-  // Remove hasInitialContent from the dependency array to break the infinite loop
-  }, [content, editor, isStreaming, hasEndingBackticks]);
+  // 添加 hasInitialContent 到依賴數組，但使用條件檢查來避免無限循環
+  }, [content, editor, isStreaming, hasEndingBackticks, hasInitialContent]);
 
   // Reset copy success message after 2 seconds
   useEffect(() => {
