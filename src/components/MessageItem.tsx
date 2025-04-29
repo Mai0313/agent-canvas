@@ -15,9 +15,6 @@ import editCodeIcon from "../assets/icon/edit-code.svg";
 import deleteIcon from "../assets/icon/delete.svg";
 import regenerateIcon from "../assets/icon/regenerate.svg";
 
-// Track if this is the first render for streaming messages
-let initialRenderComplete = false;
-
 interface MessageItemProps {
   message: Message;
   isStreaming?: boolean;
@@ -175,6 +172,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
     isEditMode,
     isStreaming,
     hasInitialContent,
+    message.isGeneratingImage,
+    message.isGeneratingCode,
   ]);
 
   // 當模型下拉選單打開時，獲取可用模型
