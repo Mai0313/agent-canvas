@@ -226,6 +226,11 @@ export const generateImageAndText = async (
       size: "1024x1024", // Add size parameter for better quality
     });
 
+    // Add a check to ensure imageResponse.data is defined
+    if (!imageResponse.data) {
+      throw new Error("No data received from the API");
+    }
+
     // Extract the URL from the response
     const imageUrl = imageResponse.data[0]?.url;
     if (!imageUrl) {
