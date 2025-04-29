@@ -70,6 +70,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize a read-only editor for displaying content
+  // Call useCreateBlockNote hook directly at the component level (not inside a callback)
   const editor = useCreateBlockNote({
     // 添加代碼高亮支持
     codeBlock,

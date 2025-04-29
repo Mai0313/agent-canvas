@@ -45,6 +45,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
   onAskGpt,
 }) => {
   // Create the editor instance with proper configuration
+  // Call useCreateBlockNote directly at the component level (not inside a callback)
   const editor = useCreateBlockNote({
     // 添加代碼塊高亮配置
     codeBlock,
@@ -224,7 +225,7 @@ const MarkdownCanvas: React.FC<MarkdownCanvasProps> = ({
       // 只有當程式碼區塊完整時（有結束標記）才生成標題
       setShouldGenerateTitle(hasClosingBackticks);
     } else {
-      // 關閉編輯器時重置狀態，確保下次打開時重新載入
+      // 關閉編輯器時重置狀態，確保下次打開时重新載入
       isFirstRender.current = true;
       setHasInitialContent(false);
     }
