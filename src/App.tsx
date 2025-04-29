@@ -288,8 +288,6 @@ const App: React.FC = () => {
           setEditingMessageId,
           setCodeBlockPosition,
           setIsMarkdownCanvasOpen,
-          // Providing a dummy function as we removed codeBlockDetected state
-          () => {},
         );
       } else {
         // Handle normal chat or code tasks - 使用新模組
@@ -352,11 +350,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleMarkdownDetected = (content: string, messageId: string) => {
-    // This function is no longer needed for automatic code block detection
-    // It will only be used if explicitly called by task type management
-  };
-
   const handleSaveMarkdown = (editedContent: string) => {
     saveMarkdownContent(
       editedContent,
@@ -399,7 +392,6 @@ const App: React.FC = () => {
             messages={messages}
             settings={settings}
             onSendMessage={handleSendMessage}
-            onMarkdownDetected={handleMarkdownDetected}
             isLoading={isLoading}
             streamingMessageId={streamingMessageId}
             editingMessageId={editingMessageId}

@@ -98,7 +98,6 @@ export const handleCanvasMode = async (
     React.SetStateAction<{ start: number; end: number } | null>
   >,
   setIsMarkdownCanvasOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  setCodeBlockDetected: React.Dispatch<React.SetStateAction<boolean>>,
 ): Promise<void> => {
   // 步驟 1: 僅生成代碼塊 - 這將直接輸出到 MarkdownCanvas
   let codeBlock = "";
@@ -179,9 +178,6 @@ export const handleCanvasMode = async (
       }
       return updatedMessages;
     });
-
-    // 確保不會意外更新 MarkdownCanvas 的內容
-    setCodeBlockDetected(true);
 
     // 步驟3：生成解釋文本
     await chatCompletion(

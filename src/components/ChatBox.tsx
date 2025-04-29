@@ -8,7 +8,6 @@ interface ChatBoxProps {
   messages: Message[];
   settings: ModelSetting;
   onSendMessage: (content: string | MessageContent[]) => void;
-  onMarkdownDetected: (content: string, messageId: string) => void;
   isLoading: boolean;
   streamingMessageId?: string | null;
   editingMessageId?: string | null;
@@ -28,13 +27,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   messages,
   settings,
   onSendMessage,
-  onMarkdownDetected,
   isLoading,
   streamingMessageId,
   editingMessageId,
   longestCodeBlockPosition,
   toggleMarkdownCanvas,
-  // 新增的消息操作功能
   onCopy,
   onEdit,
   onDelete,
@@ -90,7 +87,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     };
   }, []);
 
-  // 消息更新時的滾動處理
+  // 消息更新時的滾动處理
   useEffect(() => {
     // 只在以下情況才滾動到底部：
     // 1. 新消息到達（如發送新消息）且未被用戶手動禁用自動滾動
@@ -122,16 +119,30 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       // 如果正在 streaming 並且用戶向上滾動，標記為用戶主動滾動
       if (streamingMessageId && !isNearBottom()) {
         userScrolledRef.current = true;
+        setAutoScrollEnabled(false);
       }
       // 如果用戶滾動到接近底部，重置標記
       else if (isNearBottom()) {
         userScrolledRef.current = false;
+        setAutoScrollEnabled(true);
       }
     };
 
-    container.addEventListener("scroll", handleUserScroll);
+    // 使用節流函數來減少滾動事件的頻繁觸發
+    let scrollTimeout: NodeJS.Timeout | null = null;
+    const throttledScroll = () => {
+      if (!scrollTimeout) {
+        scrollTimeout = setTimeout(() => {
+          handleUserScroll();
+          scrollTimeout = null;
+        }, 100);
+      }
+    };
+
+    container.addEventListener("scroll", throttledScroll);
     return () => {
-      container.removeEventListener("scroll", handleUserScroll);
+      container.removeEventListener("scroll", throttledScroll);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
     };
   }, [streamingMessageId]);
 
@@ -143,6 +154,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         setQuotedText(customEvent.detail.quotedText);
       }
     };
+
+    //
 
     // 註冊全局事件監聽器
     document.addEventListener("setQuotedText", handleSetQuotedText as EventListener);
@@ -198,8 +211,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     };
   }, []);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
