@@ -5,11 +5,19 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile
       target: prod
-    env_file:
-      - .env
+    environment:
+      REACT_APP_API_TYPE: openai
+      REACT_APP_API_KEY: srv_dvc_tma001
+      REACT_APP_BASE_URL: https://tma.mediatek.inc/tma/sdk/api
+      REACT_APP_TEMPERATURE: 0.7
+      REACT_APP_MAX_TOKENS: 2048
+      REACT_APP_AZURE_DEPLOYMENT: ""
+      REACT_APP_AZURE_API_VERSION: 2025-03-01-preview
+      REACT_APP_ROOT_PATH: "/it-canvas/experimental"
     command:
       - yarn
       - start
+      # - dev
       - --host=0.0.0.0
       - --port=3000
     ports:
