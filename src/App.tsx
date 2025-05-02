@@ -202,12 +202,12 @@ const App: React.FC<AppProps> = ({ basePath }) => {
 
     // Update URL with the new thread ID without page reload
     const url = new URL(window.location.href);
-    
+
     // Ensure the URL is properly formed with the base path
     if (basePath && !url.pathname.startsWith(basePath)) {
-      url.pathname = `${basePath}${url.pathname.startsWith('/') ? '' : '/'}${url.pathname}`;
+      url.pathname = `${basePath}${url.pathname.startsWith("/") ? "" : "/"}${url.pathname}`;
     }
-    
+
     url.searchParams.set("thread_id", newThreadId);
     window.history.pushState({ threadId: newThreadId }, "", url.toString());
 
@@ -227,14 +227,14 @@ const App: React.FC<AppProps> = ({ basePath }) => {
 
     // Verify the URL contains the correct base path
     const needsPathUpdate = basePath && !url.pathname.startsWith(basePath);
-    
+
     if (existingThreadId) {
       // Use the existing thread ID from URL
       setThreadId(existingThreadId);
-      
+
       // Update path if needed but keep the thread ID
       if (needsPathUpdate) {
-        const newPath = `${basePath}${url.pathname.startsWith('/') ? '' : '/'}${url.pathname.replace(/^\//, '')}`;
+        const newPath = `${basePath}${url.pathname.startsWith("/") ? "" : "/"}${url.pathname.replace(/^\//, "")}`;
         url.pathname = newPath;
         window.history.replaceState({ threadId: existingThreadId }, "", url.toString());
       }
